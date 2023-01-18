@@ -1,0 +1,364 @@
+* keybinding modes
+#+BEGIN_SRC emacs-lisp
+      (use-package which-key
+      ;;:init (which-key-mode)
+        :diminish which-key-mode
+        :config
+        (setq which-key-idle-delay 0.3))
+
+      (global-unset-key "\C-d")
+
+    (use-package browse-kill-ring
+      :bind (("M-y" . browse-kill-ring)))
+
+    (use-package crux
+      :bind (("C-a" . crux-move-beginning-of-line)
+             ("C-o" . crux-smart-open-line)
+             ("C-S-o" . crux-smart-open-line-above)))
+
+      (use-package selected
+        :ensure t
+        :commands selected-minor-mode
+        :init
+        (selected-global-mode)
+        (setq selected-org-mode-map (make-sparse-keymap))
+        :bind (:map selected-keymap
+          ("C-q" . selected-off)
+          ("u" . upcase-region)
+          ("M-l" . downcase-region)
+          ("C-d C-r" . kill-region)
+          ("C-w" . copy-region-as-kill)
+          ("m" . apply-macro-to-region-lines)
+          ;;("C-%" . anzu-isearch-query-replace)
+          :map selected-org-mode-map
+          ("t" . org-table-convert-region)))
+
+      (use-package expand-region
+             :bind ("C-=" .  er/expand-region))
+
+  (defun dwim/goto-char (arg char)
+    "Move pointer up to and including ARG'th occurrence of CHAR.
+  Case is ignored if `case-fold-search' is non-nil in the current buffer.
+  Goes backward if ARG is negative; error if CHAR not found."
+    (interactive "p\ncchar: ")
+    (if (char-table-p translation-table-for-input)
+        (setq char (or (aref translation-table-for-input char) char)))
+     (progn (search-forward (char-to-string char)
+                                           nil nil arg) (point)))
+
+      (use-package avy)
+
+      (use-package anzu)
+    (global-anzu-mode +1)
+    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+
+      (use-package ace-window)
+
+      ;; (use-package viper
+      ;;   :ensure nil
+      ;;   :bind (("C-f" . viper-find-char-forward)))
+
+      (use-package god-mode
+        :config
+        (setq god-exempt-major-modes nil)
+        (setq god-exempt-predicates nil)
+        (global-set-key (kbd "C-x C-1") #'delete-other-windows)
+        (global-set-key (kbd "C-x C-2") #'split-window-below)
+        (global-set-key (kbd "C-x C-3") #'split-window-right)
+        (global-set-key (kbd "C-x C-0") #'delete-window)
+        (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+        ;;(define-key god-local-mode-map (kbd "i") #'god-mode-all)
+        (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
+        (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
+
+        (define-key god-local-mode-map (kbd "j") nil)
+        (define-key god-local-mode-map (kbd "j l") #'avy-goto-line)
+        (define-key god-local-mode-map (kbd "j k") #'avy-goto-char)
+        (define-key god-local-mode-map (kbd "j e") #'avy-goto-end-of-line)
+        (define-key god-local-mode-map (kbd "j j") #'avy-goto-word-1)
+        (define-key god-local-mode-map (kbd "j w") #'ace-window)
+
+        (global-unset-key "\C-d")
+        (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
+        (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
+        (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
+        (define-key god-local-mode-map (kbd "h") #'backward-char)
+        (define-key god-local-mode-map (kbd "l") #'forward-char)
+        (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
+        (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
+        (global-set-key (kbd "<escape>") #'god-mode-all)
+        (define-key god-local-mode-map (kbd ".") #'repeat))
+#+END_SRC
+
+* appearance
+#+BEGIN_SRC emacs-lisp
+
+  (load-theme 'ef-autumn :no-confirm)
+
+    (use-package all-the-icons
+      :ensure t)
+
+    (use-package doom-modeline
+      :ensure t
+      :init
+      :hook (after-init . doom-modeline-mode)
+      :config
+      (setq doom-modeline-buffer-encoding nil))
+
+    (use-package rainbow-delimiters
+    :defer t
+    :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+
+* projects
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile)
+#+END_SRC
+
+* emacs completion frameworks
+#+BEGIN_SRC emacs-lisp
+(defun dw/minibuffer-backward-kill (arg)
+  "When minibuffer is completing a file name delete up to parent
+folder, otherwise delete a word"
+  (interactive "p")
+  (if minibuffer-completing-file-name
+      ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+      (if (string-match-p "./" (minibuffer-contents))
+          (zap-up-to-char (- arg) ?/)
+        (delete-minibuffer-contents))
+    (delete-backward-char arg)))
+
+(use-package vertico
+  :ensure t
+  :bind (:map vertico-map
+         ("C-j" . vertico-next)
+         ("C-k" . vertico-previous)
+         ("C-f" . vertico-exit)
+         :map minibuffer-local-map
+         ("DEL" . dw/minibuffer-backward-kill))
+  :custom
+  (vertico-cycle t)
+  :init
+  (vertico-mode))
+
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+(defun dw/get-project-root ()
+  (when (fboundp 'projectile-project-root)
+    (projectile-project-root)))
+
+(setq completion-ignore-case  t)
+
+(setq read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      completion-ignore-case t)
+
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode))
+#+END_SRC
+
+* searching
+
+#+BEGIN_SRC emacs-lisp
+(use-package consult
+  :bind (("C-M-l" . consult-imenu)
+     :map isearch-mode-map
+     ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+     ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+     ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+     ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
+     :map minibuffer-local-map
+     ("C-r" . consult-history))
+  :custom
+  (consult-project-root-function #'dw/get-project-root)
+  (completion-in-region-function #'consult-completion-in-region))
+
+#+END_SRC
+
+* notes
+#+BEGIN_SRC emacs-lisp
+(use-package denote
+  :config
+  (setq denote-known-keywords '("code" "history" "current events"))
+  (setq denote-directory (expand-file-name "/home/isaac/denote/"))
+  (setq denote-file-type nil))
+
+(add-hook 'dired-mode-hook #'denote-dired-mode)
+
+(use-package consult-notes
+  ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
+  :commands (consult-notes consult-notes-search-in-all-notes)
+  :config
+  (setq consult-notes-file-dir-sources '(("Name"  key  "/home/isaac/denote/")))  ;; Set notes dir(s), see below
+  ;; Set org-roam integration OR denote integration, e.g.:
+  (when (locate-library "denote")
+    (consult-notes-denote-mode)))
+
+#+END_SRC
+
+* Common Lisp
+#+begin_src emacs-lisp
+  ;; (use-package sly
+  ;; :straight (:type git :host github :repo "joaotavora/sly")
+  ;; :commands (sly sly-connect))
+
+  ;; (setq sly-lisp-implementations '((sbcl ("sbcl" "--core"
+  ;;     "sbcl.core-for-sly"))))
+#+end_src
+
+* Clojure
+#+BEGIN_SRC emacs-lisp
+(use-package clojure-mode
+  :defer t
+  :ensure t
+  :mode (("\\.clj\\'" . clojure-mode)
+         ("\\.edn\\'" . clojure-mode))
+  :init
+  ;; (add-hook 'clojure-mode-hook #'yas-minor-mode)
+  ;; (add-hook 'clojure-mode-hook #'subword-mode)
+  ;; (add-hook 'clojure-mode-hook #'eldoc-mode)
+  (add-hook 'clojure-mode-hook #'idle-highlight-mode))
+
+    ;; (use-package cider
+    ;;   :ensure t
+    ;;   :defer t
+    ;;   :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+    ;;   :diminish subword-mode
+    ;;   :config
+    ;;   (setq nrepl-log-messages t
+    ;;         cider-repl-display-in-current-window t
+    ;;         cider-repl-use-clojure-font-lock t
+    ;;         cider-prompt-save-file-on-load 'always-save
+    ;;         cider-font-lock-dynamically '(macro core function var)
+    ;;         nrepl-hide-special-buffers t
+    ;;         cider-overlays-use-font-lock t)
+    ;;   (cider-repl-toggle-pretty-printing))
+
+
+(use-package cider
+;;   :straight (:type git :host github :repo "clojure-emacs/cider")
+  :ensure t
+  :defer t
+  :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+  :diminish subword-mode
+  :config
+    (setq nrepl-log-messages t
+        cider-repl-display-in-current-window t
+        cider-repl-use-clojure-font-lock t
+        cider-prompt-save-file-on-load 'always-save
+        cider-font-lock-dynamically '(macro core function var)
+        nrepl-hide-special-buffers t
+        cider-overlays-use-font-lock t)
+  (cider-repl-toggle-pretty-printing))
+#+END_SRC
+
+* autocomplete
+#+BEGIN_SRC emacs-lisp
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 1)
+
+          ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+          ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+          ;; (setq read-extended-command-predicate
+          ;;       #'command-completion-default-include-p)
+
+          ;; Enable indentation+completion using the TAB key.
+          ;; `completion-at-point' is often bound to M-TAB.
+          (setq tab-always-indent 'complete))
+
+        (use-package corfu
+          ;; Optional customizations
+           :custom
+           (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+           (corfu-auto t)                 ;; Enable auto completion
+           (corfu-auto-delay 0)
+           (corfu-auto-prefix 1)
+           (corfu-separator ?\s)          ;; Orderless field separator
+           :config
+           (global-corfu-mode)
+          )
+
+
+        (use-package cape
+          :init
+          ;; Add `completion-at-point-functions', used by `completion-at-point'.
+          (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+          (add-to-list 'completion-at-point-functions #'cape-file))
+
+        (use-package eglot
+          :ensure t
+          :commands (eglot eglot-ensure)
+          :hook ((clojure-mode . eglot-ensure)))
+#+END_SRC
+
+* org
+#+BEGIN_SRC emacs-lisp
+
+  (use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+;; renames buffer when the name starts with title
+(defun org+-buffer-name-to-title ()
+  "Rename buffer to value of #+title:."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+      (rename-buffer (match-string 1)))))
+
+(add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+
+    ;; Turn on indentation and auto-fill mode for Org files
+  (defun dw/org-mode-setup ()
+    (org-bullets-mode)
+    (org-indent-mode)
+  ;;  (variable-pitch-mode 1)
+    (auto-fill-mode 0)
+    (visual-line-mode 1)
+    ;; (setq evil-auto-indent nil)
+    ;; (company-ispell)
+
+    (add-to-list 'completion-at-point-functions #'cape-ispell)
+    (org+-buffer-name-to-title)
+    )
+
+
+  (use-package org
+    :defer t
+    :hook (org-mode . dw/org-mode-setup)
+    :config
+    (setq org-agenda-start-with-log-mode t)
+    (setq org-log-done `time)
+    (setq org-log-into-drawer t))
+#+END_SRC
+
+* PDF
+#+BEGIN_SRC emacs-lisp
+  (setq doc-view-continuous t)
+
+    (add-hook 'doc-view-mode-hook
+    (lambda ()
+     (local-set-key (kbd "n") 'doc-view-scroll-down-or-previous-page)
+     (local-set-key (kbd "p") 'doc-view-scroll-up-or-next-page)))
+
+
+  (use-package pdf-tools
+    :defer t)
+
+  (add-hook 'pdf-view-mode-hook
+            (lambda ()
+              (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
+              (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+#+END_SRC
