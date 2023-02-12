@@ -1,100 +1,187 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
-      (use-package which-key
-      ;;:init (which-key-mode)
-        :diminish which-key-mode
-        :config
-        (setq which-key-idle-delay 0.3))
-
-      (global-unset-key "\C-d")
-
-    (use-package browse-kill-ring
-      :bind (("M-y" . browse-kill-ring)))
-
-    (use-package crux
-      :bind (("C-a" . crux-move-beginning-of-line)
-             ("C-o" . crux-smart-open-line)
-             ("C-S-o" . crux-smart-open-line-above)))
-
-      (use-package selected
-        :ensure t
-        :commands selected-minor-mode
-        :init
-        (selected-global-mode)
-        (setq selected-org-mode-map (make-sparse-keymap))
-        :bind (:map selected-keymap
-          ("C-q" . selected-off)
-          ("u" . upcase-region)
-          ("M-l" . downcase-region)
-          ("C-d C-r" . kill-region)
-          ("C-w" . copy-region-as-kill)
-          ("m" . apply-macro-to-region-lines)
-          ;;("C-%" . anzu-isearch-query-replace)
-          :map selected-org-mode-map
-          ("t" . org-table-convert-region)))
-
-      (use-package expand-region
-             :bind ("C-=" .  er/expand-region))
-
-  (defun dwim/goto-char (arg char)
-    "Move pointer up to and including ARG'th occurrence of CHAR.
-  Case is ignored if `case-fold-search' is non-nil in the current buffer.
-  Goes backward if ARG is negative; error if CHAR not found."
-    (interactive "p\ncchar: ")
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char)))
-     (progn (search-forward (char-to-string char)
-                                           nil nil arg) (point)))
-
-      (use-package avy)
-
-      (use-package anzu)
-    (global-anzu-mode +1)
-    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
-
-      (use-package ace-window)
-
-      ;; (use-package viper
-      ;;   :ensure nil
-      ;;   :bind (("C-f" . viper-find-char-forward)))
-
-      (use-package god-mode
-        :config
-        (setq god-exempt-major-modes nil)
-        (setq god-exempt-predicates nil)
-        (global-set-key (kbd "C-x C-1") #'delete-other-windows)
-        (global-set-key (kbd "C-x C-2") #'split-window-below)
-        (global-set-key (kbd "C-x C-3") #'split-window-right)
-        (global-set-key (kbd "C-x C-0") #'delete-window)
-        (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
-        ;;(define-key god-local-mode-map (kbd "i") #'god-mode-all)
-        (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
-        (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
-
-        (define-key god-local-mode-map (kbd "j") nil)
-        (define-key god-local-mode-map (kbd "j l") #'avy-goto-line)
-        (define-key god-local-mode-map (kbd "j k") #'avy-goto-char)
-        (define-key god-local-mode-map (kbd "j e") #'avy-goto-end-of-line)
-        (define-key god-local-mode-map (kbd "j j") #'avy-goto-word-1)
-        (define-key god-local-mode-map (kbd "j w") #'ace-window)
+        (use-package which-key
+          :init (which-key-mode)
+          (which-key-enable-god-mode-support)
+          :diminish which-key-mode
+          :config
+          (setq which-key-idle-delay 0.3))
 
         (global-unset-key "\C-d")
-        (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
-        (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
-        (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
-        (define-key god-local-mode-map (kbd "h") #'backward-char)
-        (define-key god-local-mode-map (kbd "l") #'forward-char)
-        (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
-        (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
-        (global-set-key (kbd "<escape>") #'god-mode-all)
-        (define-key god-local-mode-map (kbd ".") #'repeat))
+        (global-set-key (kbd "C-x m") #'eshell)
+
+        (use-package browse-kill-ring
+          :bind (("M-y" . browse-kill-ring)))
+
+        (use-package crux
+          :bind (("C-a" . crux-move-beginning-of-line)
+                 ("C-o" . crux-smart-open-line)
+                 ("C-S-o" . crux-smart-open-line-above)))
+
+        (use-package selected
+          :ensure t
+          :commands selected-minor-mode
+          :init
+          (selected-global-mode)
+          (setq selected-org-mode-map (make-sparse-keymap))
+          :bind (:map selected-keymap
+                      ("C-q" . selected-off)
+                      ("u" . upcase-region)
+                      ("M-l" . downcase-region)
+                      ("C-d C-r" . kill-region)
+                      ("C-w" . copy-region-as-kill)
+                      ("m" . apply-macro-to-region-lines)
+                      ;;("C-S-'" . er/mark-inside-quotes)
+                      ;;("C-%" . anzu-isearch-query-replace)
+                      :map selected-org-mode-map
+                      ("t" . org-table-convert-region)))
+
+        (use-package expand-region
+          :bind ("C-=" .  er/expand-region))
+
+        (defun match-paren (arg)
+          "Go to the matching paren if on a paren; otherwise insert %."
+          (interactive "p")
+          (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+                ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+                (t (self-insert-command (or arg 1)))))
+
+        (defun dwim/goto-char (arg char)
+          "Move pointer up to and including ARG'th occurrence of CHAR.
+              Case is ignored if `case-fold-search' is non-nil in the current buffer.
+              Goes backward if ARG is negative; error if CHAR not found."
+          (interactive "p\ncchar: ")
+          (if (char-table-p translation-table-for-input)
+              (setq char (or (aref translation-table-for-input char) char)))
+          (progn (search-forward (char-to-string char)
+                                 nil nil arg) (point)))
+
+        (use-package avy
+          :init
+          (setq avy-all-windows 'all-frames)
+          (setq avy-style 'post)
+          (setq avy-styles-alist '((avy-goto-char . post)
+
+                                   (avy-goto-line . at-full)
+                                   (avy-goto-end-of-line . post)
+                                   ))
+          (setq avy-keys '(?j ?k ?l ?\; ?n ?m ?i ?o ?s ?d ?f ?g ?h )))
+
+        (use-package anzu
+          :config
+          (global-anzu-mode +1))
+        (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+        (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+
+        (use-package ace-window)
+
+        (use-package smartparens
+          :config
+          (global-set-key (kbd "C->") #'sp-forward-slurp-sexp)
+          (global-set-key (kbd "C-<") #'sp-forward-barf-sexp))
+
+        (use-package hydra)
+
+        (defun kmacro-toggle-start-end ()
+          "Starts kmacro unless one is already in progress than it ends it"
+          (interactive)
+          (if defining-kbd-macro
+              (kmacro-end-macro 1)
+            (kmacro-start-macro 0)))
+
+        (use-package god-mode
+          :config
+          (setq god-exempt-major-modes nil)
+          (setq god-exempt-predicates nil)
+          (global-set-key (kbd "C-x C-1") #'delete-other-windows)
+          (global-set-key (kbd "C-x C-2") #'split-window-below)
+          (global-set-key (kbd "C-x C-3") #'split-window-right)
+          (global-set-key (kbd "C-x C-0") #'delete-window)
+          (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+          (define-key god-local-mode-map (kbd "i") #'god-mode-all)
+          (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
+          (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
+
+          (global-set-key (kbd "C-k") #'kmacro-toggle-start-end)
+
+          (define-key god-local-mode-map (kbd "h") (kbd "C-b"))
+          (define-key god-local-mode-map (kbd "l") (kbd "C-f"))
+          (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
+          (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
+
+          (define-key god-local-mode-map (kbd "%") #'match-paren)
+
+          (define-key god-local-mode-map (kbd "b") #'backward-word)
+
+          (define-key god-local-mode-map (kbd "n") #'fast-nav-mode)
+
+          (define-key god-local-mode-map (kbd "m") #'imenu)
+
+          (define-key god-local-mode-map (kbd "w") #'forward-word)
+          (define-key god-local-mode-map (kbd ";") (kbd "C--"))
+          (define-key god-local-mode-map (kbd "p") #'kmacro-toggle-start-end)
+
+          (global-unset-key "\C-d")
+          (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
+          (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
+          (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
+          (define-key god-local-mode-map (kbd "C-d C-f") #'zap-to-char)
+          (define-key god-local-mode-map (kbd "C-d C-S-f") #'(lambda (char) (interactive "cZap back to char: ") (zap-to-char -1 char)))
+
+
+          (require 'god-mode-isearch)
+          (define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
+          (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
+
+
+          (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
+          (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
+          ;;(global-set-key (kbd "<escape>") #'god-mode-all)
+          (define-key input-decode-map [?\C-i] [C-i])
+          (global-set-key (kbd "<C-i>") #'god-mode-all)
+          (define-key god-local-mode-map (kbd ".") #'repeat))
+
+        (defun my-god-mode-update-nav-state ()
+          (if fast-nav-mode (fast-nav-mode -1)))
+
+        (add-hook 'god-mode-disabled-hook #'my-god-mode-update-nav-state)
+
+        ;; must be loaded after god mode to prevent key conflicts
+        (define-minor-mode fast-nav-mode
+          "Minor mode to rapidly move over large sections of code"
+          :lighter "Fast-nav"
+          :keymap (let ((map (make-keymap)))
+                    (define-key map (kbd "j") 'forward-sexp)
+                    (define-key map (kbd "k") 'backward-sexp)
+                    (define-key map (kbd "d") 'down-list)
+                    (define-key map (kbd "u") 'up-list)
+                    (define-key map (kbd "m") 'consult-mark)
+                    (define-key map (kbd "f") 'forward-paragraph)
+                    (define-key map (kbd "b") 'backward-paragraph)
+                    ;;(define-key map (kbd "l") ')
+                    (define-key map (kbd "n") 'fast-nav-mode)
+                    map))
+
+        (use-package key-chord
+          :init (key-chord-mode 1)
+          :config
+          (key-chord-define-global "ii" 'god-mode-all)
+          (key-chord-define-global "xs" 'save-buffer)
+          (key-chord-define god-local-mode-map "jl" 'avy-goto-line)
+          (key-chord-define god-local-mode-map "jw" 'ace-window)
+          (key-chord-define god-local-mode-map "je" 'avy-goto-end-of-line)
+          (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
+          (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
+
 #+END_SRC
 
 * appearance
 #+BEGIN_SRC emacs-lisp
-
-  (load-theme 'ef-autumn :no-confirm)
+  ;; sets frame transparency
+  ;; (set-frame-parameter (selected-frame) 'alpha '(90 90))
+  ;; (add-to-list 'default-frame-alist '(alpha 90 90))
+  (menu-bar-mode -1) 
+  (load-theme 'ef-bio :no-confirm)
 
     (use-package all-the-icons
       :ensure t)
@@ -118,50 +205,55 @@
 
 * emacs completion frameworks
 #+BEGIN_SRC emacs-lisp
-(defun dw/minibuffer-backward-kill (arg)
-  "When minibuffer is completing a file name delete up to parent
-folder, otherwise delete a word"
-  (interactive "p")
-  (if minibuffer-completing-file-name
-      ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
-      (if (string-match-p "./" (minibuffer-contents))
-          (zap-up-to-char (- arg) ?/)
-        (delete-minibuffer-contents))
-    (delete-backward-char arg)))
+  (defun dw/minibuffer-backward-kill (arg)
+    "When minibuffer is completing a file name delete up to parent
+  folder, otherwise delete a word"
+    (interactive "p")
+    (if minibuffer-completing-file-name
+        ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+        (if (string-match-p "./" (minibuffer-contents))
+            (zap-up-to-char (- arg) ?/)
+          (delete-minibuffer-contents))
+      (delete-backward-char arg)))
 
-(use-package vertico
-  :ensure t
-  :bind (:map vertico-map
-         ("C-j" . vertico-next)
-         ("C-k" . vertico-previous)
-         ("C-f" . vertico-exit)
-         :map minibuffer-local-map
-         ("DEL" . dw/minibuffer-backward-kill))
-  :custom
-  (vertico-cycle t)
-  :init
-  (vertico-mode))
+  (defhydra hydra-vertico-next ()
+    "move around mini buffer"
+    ("j" vertico-next "next")
+    ("k" vertico-previous "previous"))
 
-(use-package orderless
-  :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  (use-package vertico
+    :ensure t
+    :bind (:map vertico-map
+           ("C-j" . hydra-vertico-next/vertico-next)
+           ("C-k" . vertico-previous)
+           ("C-f" . vertico-exit)
+           :map minibuffer-local-map
+           ("DEL" . dw/minibuffer-backward-kill))
+    :custom
+    (vertico-cycle t)
+    :init
+    (vertico-mode))
 
-(defun dw/get-project-root ()
-  (when (fboundp 'projectile-project-root)
-    (projectile-project-root)))
+  (use-package orderless
+    :ensure t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-overrides '((file (styles basic partial-completion)))))
 
-(setq completion-ignore-case  t)
+  (defun dw/get-project-root ()
+    (when (fboundp 'projectile-project-root)
+      (projectile-project-root)))
 
-(setq read-file-name-completion-ignore-case t
-      read-buffer-completion-ignore-case t
-      completion-ignore-case t)
+  (setq completion-ignore-case  t)
 
-(use-package marginalia
-  :ensure t
-  :config
-  (marginalia-mode))
+  (setq read-file-name-completion-ignore-case t
+        read-buffer-completion-ignore-case t
+        completion-ignore-case t)
+
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode))
 #+END_SRC
 
 * searching
@@ -184,27 +276,32 @@ folder, otherwise delete a word"
 
 * notes
 #+BEGIN_SRC emacs-lisp
-(use-package denote
-  :config
-  (setq denote-known-keywords '("code" "history" "current events"))
-  (setq denote-directory (expand-file-name "/home/isaac/denote/"))
-  (setq denote-file-type nil))
+  (use-package denote
+    :config
+    (setq denote-known-keywords '("code" "history" "current-events"))
+    (setq denote-directory (expand-file-name "/home/isaac/denote/"))
+    (setq denote-file-type nil))
 
-(add-hook 'dired-mode-hook #'denote-dired-mode)
+  (add-hook 'dired-mode-hook #'denote-dired-mode)
 
-(use-package consult-notes
-  ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
-  :commands (consult-notes consult-notes-search-in-all-notes)
-  :config
-  (setq consult-notes-file-dir-sources '(("Name"  key  "/home/isaac/denote/")))  ;; Set notes dir(s), see below
-  ;; Set org-roam integration OR denote integration, e.g.:
-  (when (locate-library "denote")
-    (consult-notes-denote-mode)))
+  (use-package consult-notes
+    ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
+    :commands (consult-notes consult-notes-search-in-all-notes)
+    :config
+    (setq consult-notes-file-dir-sources '(("Name"  key  "/home/isaac/denote/")))  ;; Set notes dir(s), see below
+    (global-set-key (kbd "C-x C-n") nil)
+    (global-set-key (kbd "C-x C-n C-s") #'consult-notes)
+      (global-set-key (kbd "C-x C-n C-d") #'denote)
+    
+    ;; Set org-roam integration OR denote integration, e.g.:
+    (when (locate-library "denote")
+      (consult-notes-denote-mode)))
 
 #+END_SRC
 
 * Common Lisp
 #+begin_src emacs-lisp
+  (use-package sly)
   ;; (use-package sly
   ;; :straight (:type git :host github :repo "joaotavora/sly")
   ;; :commands (sly sly-connect))
@@ -226,22 +323,6 @@ folder, otherwise delete a word"
   ;; (add-hook 'clojure-mode-hook #'eldoc-mode)
   (add-hook 'clojure-mode-hook #'idle-highlight-mode))
 
-    ;; (use-package cider
-    ;;   :ensure t
-    ;;   :defer t
-    ;;   :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
-    ;;   :diminish subword-mode
-    ;;   :config
-    ;;   (setq nrepl-log-messages t
-    ;;         cider-repl-display-in-current-window t
-    ;;         cider-repl-use-clojure-font-lock t
-    ;;         cider-prompt-save-file-on-load 'always-save
-    ;;         cider-font-lock-dynamically '(macro core function var)
-    ;;         nrepl-hide-special-buffers t
-    ;;         cider-overlays-use-font-lock t)
-    ;;   (cider-repl-toggle-pretty-printing))
-
-
 (use-package cider
 ;;   :straight (:type git :host github :repo "clojure-emacs/cider")
   :ensure t
@@ -261,43 +342,48 @@ folder, otherwise delete a word"
 
 * autocomplete
 #+BEGIN_SRC emacs-lisp
-(use-package emacs
-  :init
-  ;; TAB cycle if there are only few candidates
-  (setq completion-cycle-threshold 1)
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 1)
+            ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+            ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+            ;; (setq read-extended-command-predicate
+            ;;       #'command-completion-default-include-p)
+            ;; Enable indentation+completion using the TAB key.
+            ;; `completion-at-point' is often bound to M-TAB.
+            (setq tab-always-indent 'complete))
 
-          ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-          ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-          ;; (setq read-extended-command-predicate
-          ;;       #'command-completion-default-include-p)
+  (defhydra hydra-corfu-next ()
+    "move around autocomplete"
+    ("j" corfu-next "next")
+    ("k" corfu-previous "previous"))
 
-          ;; Enable indentation+completion using the TAB key.
-          ;; `completion-at-point' is often bound to M-TAB.
-          (setq tab-always-indent 'complete))
-
-        (use-package corfu
-          ;; Optional customizations
-           :custom
-           (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-           (corfu-auto t)                 ;; Enable auto completion
-           (corfu-auto-delay 0)
-           (corfu-auto-prefix 1)
-           (corfu-separator ?\s)          ;; Orderless field separator
-           :config
-           (global-corfu-mode)
-          )
+  (use-package corfu
+    ;; Optional customizations
+     :custom
+     (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+     (corfu-auto t)                 ;; Enable auto completion
+     (corfu-auto-delay 0)
+     (corfu-auto-prefix 1)
+     (corfu-separator ?\s)          ;; Orderless field separator
+     :config
+     (global-corfu-mode)
+     :bind
+     (:map corfu-map ("C-j" . hydra-corfu-next/corfu-next)))
 
 
-        (use-package cape
-          :init
-          ;; Add `completion-at-point-functions', used by `completion-at-point'.
-          (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-          (add-to-list 'completion-at-point-functions #'cape-file))
+  (use-package cape
+    :init
+    ;; Add `completion-at-point-functions', used by `completion-at-point'.
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file))
 
-        (use-package eglot
-          :ensure t
-          :commands (eglot eglot-ensure)
-          :hook ((clojure-mode . eglot-ensure)))
+  (use-package eglot
+    :ensure t
+    :commands (eglot eglot-ensure)
+    :hook ((clojure-mode . eglot-ensure)
+           (js-mode . eglot-ensure)))
 #+END_SRC
 
 * org
@@ -354,11 +440,86 @@ folder, otherwise delete a word"
      (local-set-key (kbd "p") 'doc-view-scroll-up-or-next-page)))
 
 
-  (use-package pdf-tools
-    :defer t)
+  ;; (use-package pdf-tools
+  ;;   :defer t)
 
-  (add-hook 'pdf-view-mode-hook
-            (lambda ()
-              (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
-              (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+  ;; (add-hook 'pdf-view-mode-hook
+  ;;           (lambda ()
+  ;;             (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
+  ;;             (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+#+END_SRC
+
+* Window Manager
+** EXWM
+#+BEGIN_SRC emacs-lisp
+  ;; (defun efs/exwm-update-class ()
+  ;;   (exwm-workspace-rename-buffer exwm-class-name))
+
+  ;; (use-package exwm
+  ;;   :config
+  ;;   ;; Set the default number of workspaces
+  ;;   (setq exwm-workspace-number 5)
+
+  ;;   ;; When window "class" updates, use it to set the buffer name
+  ;;   (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
+
+  ;;   ;; Rebind CapsLock to Ctrl
+  ;;   (start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
+
+  ;;   ;; Set the screen resolution (update this to be the correct resolution for your screen!)
+  ;;   (require 'exwm-randr)
+  ;;   (exwm-randr-enable)
+  ;;   ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
+
+  ;;   ;; Load the system tray before exwm-init
+  ;;   (require 'exwm-systemtray)
+  ;;   (exwm-systemtray-enable)
+
+  ;;   ;; These keys should always pass through to Emacs
+  ;;   (setq exwm-input-prefix-keys
+  ;;     '(?\C-x
+  ;;       ?\C-u
+  ;;       ?\C-h
+  ;;       ?\M-x
+  ;;       ?\M-`
+  ;;       ?\M-&
+  ;;       ?\M-:
+  ;;       ?\C-\M-j  ;; Buffer list
+  ;;       ?\C-\ ))  ;; Ctrl+Space
+
+  ;;   ;; Ctrl+Q will enable the next key to be sent directly
+  ;;   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+  ;;   ;; Set up global key bindings.  These always work, no matter the input state!
+  ;;   ;; Keep in mind that changing this list after EXWM initializes has no effect.
+  ;;   (setq exwm-input-global-keys
+  ;;         `(
+  ;;           ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+  ;;           ([?\s-r] . exwm-reset)
+
+  ;;           ;; Move between windows
+  ;;           ([s-left] . windmove-left)
+  ;;           ([s-right] . windmove-right)
+  ;;           ([s-up] . windmove-up)
+  ;;           ([s-down] . windmove-down)
+
+  ;;           ;; Launch applications via shell command
+  ;;           ([?\s-&] . (lambda (command)
+  ;;                        (interactive (list (read-shell-command "$ ")))
+  ;;                        (start-process-shell-command command nil command)))
+
+  ;;           ;; Switch workspace
+  ;;           ([?\s-w] . exwm-workspace-switch)
+  ;;           ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+  ;;           ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+  ;;           ,@(mapcar (lambda (i)
+  ;;                       `(,(kbd (format "s-%d" i)) .
+  ;;                         (lambda ()
+  ;;                           (interactive)
+  ;;                           (exwm-workspace-switch-create ,i))))
+  ;;                     (number-sequence 0 9))))
+
+  ;;   (exwm-enable))
+
 #+END_SRC
