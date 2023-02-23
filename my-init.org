@@ -1,188 +1,216 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
-  (use-package which-key-mode
-    :init (which-key-mode)
-    (which-key-enable-god-mode-support)
-    :diminish which-key-mode
-    :config
-    (setq which-key-idle-delay 0.3))
+      (use-package which-key-mode
+        :init (which-key-mode)
+        (which-key-enable-god-mode-support)
+        :diminish which-key-mode
+        :config
+        (setq which-key-idle-delay 0.3))
 
-  (global-unset-key "\C-d")
-  (global-set-key (kbd "C-x m") #'eshell)
+      (global-unset-key "\C-d")
+      (global-set-key (kbd "C-x m") #'eshell)
 
-  (use-package browse-kill-ring
-    :bind (("M-y" . browse-kill-ring)))
+      (use-package browse-kill-ring
+        :bind (("M-y" . browse-kill-ring)))
 
-  (use-package crux
-    :bind (("C-a" . crux-move-beginning-of-line)
-           ("C-o" . crux-smart-open-line)
-           ("C-S-o" . crux-smart-open-line-above)))
+      (use-package crux
+        :bind (("C-a" . crux-move-beginning-of-line)
+               ("C-o" . crux-smart-open-line)
+               ("C-S-o" . crux-smart-open-line-above)))
 
-  (use-package selected
-    :ensure t
-    :commands selected-minor-mode
-    :init
-    (selected-global-mode)
-    (setq selected-org-mode-map (make-sparse-keymap))
-    :bind (:map selected-keymap
-                ("C-q" . selected-off)
-                ("u" . upcase-region)
-                ("M-l" . downcase-region)
-                ("C-d C-r" . kill-region)
-                ("C-w" . copy-region-as-kill)
-                ("m" . apply-macro-to-region-lines)
-                ;;("C-S-'" . er/mark-inside-quotes)
-                ;;("C-%" . anzu-isearch-query-replace)
-                :map selected-org-mode-map
-                ("t" . org-table-convert-region)))
+      (use-package selected
+        :ensure t
+        :commands selected-minor-mode
+        :init
+        (selected-global-mode)
+        (setq selected-org-mode-map (make-sparse-keymap))
+        :bind (:map selected-keymap
+                    ("C-q" . selected-off)
+                    ("u" . upcase-region)
+                    ("M-l" . downcase-region)
+                    ("C-d C-r" . kill-region)
+                    ("C-w" . copy-region-as-kill)
+                    ("m" . apply-macro-to-region-lines)
+                    ;;("C-S-'" . er/mark-inside-quotes)
+                    ;;("C-%" . anzu-isearch-query-replace)
+                    :map selected-org-mode-map
+                    ("t" . org-table-convert-region)))
 
-  (use-package expand-region
-    :bind ("C-=" .  er/expand-region))
+      (use-package expand-region
+        :bind ("C-=" .  er/expand-region))
 
-  (defun match-paren (arg)
-    "Go to the matching paren if on a paren; otherwise insert %."
-    (interactive "p")
-    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-          (t (self-insert-command (or arg 1)))))
+      (defun match-paren (arg)
+        "Go to the matching paren if on a paren; otherwise insert %."
+        (interactive "p")
+        (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+              ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+              (t (self-insert-command (or arg 1)))))
 
-  (defun dwim/goto-char (arg char)
-    "Move pointer up to and including ARG'th occurrence of CHAR.
-        Case is ignored if `case-fold-search' is non-nil in the current buffer.
-        Goes backward if ARG is negative; error if CHAR not found."
-    (interactive "p\ncchar: ")
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char)))
-    (progn (search-forward (char-to-string char)
-                           nil nil arg) (point)))
+      (defun dwim/goto-char (arg char)
+        "Move pointer up to and including ARG'th occurrence of CHAR.
+            Case is ignored if `case-fold-search' is non-nil in the current buffer.
+            Goes backward if ARG is negative; error if CHAR not found."
+        (interactive "p\ncchar: ")
+        (if (char-table-p translation-table-for-input)
+            (setq char (or (aref translation-table-for-input char) char)))
+        (progn (search-forward (char-to-string char)
+                               nil nil arg) (point)))
 
-  (use-package avy
-    :init
-    (setq avy-all-windows 'all-frames)
-    (setq avy-style 'post)
-    (setq avy-styles-alist '((avy-goto-char . post)
+      (use-package avy
+        :init
+        (setq avy-all-windows 'all-frames)
+        (setq avy-style 'at-full)
+        ;; (setq avy-styles-alist '((avy-goto-char . post)
+        ;;                          (avy-goto-line . at-full)
+        ;;                          (avy-goto-end-of-line . post)
+        ;;                          ))
+        (setq avy-keys '(?j ?k ?l ?\; ?n ?i ?o ?s ?d ?f ?g ?h )))
 
-                             (avy-goto-line . at-full)
-                             (avy-goto-end-of-line . post)
-                             ))
-    (setq avy-keys '(?j ?k ?l ?\; ?n ?m ?i ?o ?s ?d ?f ?g ?h )))
+      (use-package anzu
+        :ensure t
+        :config
+        (global-anzu-mode +1))
+      (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+      (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
 
-  (use-package anzu
-    :ensure t
-    :config
-    (global-anzu-mode +1))
-  (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-  (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+      (use-package ace-window
+        :ensure t
+        :config
+        (global-set-key (kbd "C-x o") 'ace-window)
+     ;;customize to make face more visible
+        (custom-set-faces
+    '(aw-leading-char-face
+      ((t (:foreground "white" :background "#e52b50" :height 3.0)))))
 
-  (use-package ace-window
-    :ensure t)
+        ;; (defface aw-leading-char-face
+      ;; '((((class color)) (:foreground "white"))
+      ;;   (((background dark)) (:foreground "#e52b50"))
+      ;;   (((background light)) (:foreground "gray0"))
+      ;;   (t (:foreground "gray100" :underline nil)))
+      ;; "Face for each window's leading char.")
+        (setq aw-keys '(?s ?d ?f ?g ?h ?k ?l)))
 
-  (use-package smartparens
-    :ensure t
-    :config
-    (global-set-key (kbd "C->") #'sp-forward-slurp-sexp)
-    (global-set-key (kbd "C-<") #'sp-forward-barf-sexp))
+      (use-package smartparens
+        :ensure t
+        :config
+        (global-set-key (kbd "C->") #'sp-forward-slurp-sexp)
+        (global-set-key (kbd "C-<") #'sp-forward-barf-sexp))
 
-  (use-package hydra
-    :ensure t)
+      (use-package hydra
+        :ensure t)
 
-  (defun kmacro-toggle-start-end ()
-    "Starts kmacro unless one is already in progress than it ends it"
-    (interactive)
-    (if defining-kbd-macro
-        (kmacro-end-macro 1)
-      (kmacro-start-macro 0)))
-
-  (use-package god-mode
-    :ensure t
-    :config
-    (setq god-exempt-major-modes nil)
-    (setq god-exempt-predicates nil)
-    (global-set-key (kbd "C-x C-1") #'delete-other-windows)
-    (global-set-key (kbd "C-x C-2") #'split-window-below)
-    (global-set-key (kbd "C-x C-3") #'split-window-right)
-    (global-set-key (kbd "C-x C-0") #'delete-window)
-    (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
-    (define-key god-local-mode-map (kbd "i") #'god-mode-all)
-    (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
-    (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
-
-    (global-set-key (kbd "C-k") #'kmacro-toggle-start-end)
-
-    (define-key god-local-mode-map (kbd "h") (kbd "C-b"))
-    (define-key god-local-mode-map (kbd "l") (kbd "C-f"))
-    (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
-    (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
-
-    (define-key god-local-mode-map (kbd "%") #'match-paren)
-
-    (define-key god-local-mode-map (kbd "b") #'backward-word)
-
-    (define-key god-local-mode-map (kbd "n") #'fast-nav-mode)
-
-    (define-key god-local-mode-map (kbd "m") #'imenu)
-
-    (define-key god-local-mode-map (kbd "w") #'forward-word)
-    (define-key god-local-mode-map (kbd ";") (kbd "C--"))
-    (define-key god-local-mode-map (kbd "p") #'kmacro-toggle-start-end)
-
-    (global-unset-key "\C-d")
-    (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
-    (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
-    (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
-    (define-key god-local-mode-map (kbd "C-d C-f") #'zap-to-char)
-    (define-key god-local-mode-map (kbd "C-d C-S-f") #'(lambda (char) (interactive "cZap back to char: ") (zap-to-char -1 char)))
+      (defun kmacro-toggle-start-end ()
+        "Starts kmacro unless one is already in progress than it ends it"
+        (interactive)
+        (if defining-kbd-macro
+            (kmacro-end-macro 1)
+          (kmacro-start-macro 0)))
 
 
-    (require 'god-mode-isearch)
-    ;;(define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
-    (define-key isearch-mode-map (kbd "C-,") #'god-mode-isearch-activate)
-    (define-key god-mode-isearch-map (kbd "C-,") #'god-mode-isearch-disable)
-    ;; (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
+      (defvar isearch-repeat-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "s") #'isearch-repeat-forward)
+          (define-key map (kbd "r") #'isearch-repeat-backward)
+          map))
+
+      (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward))
+        (put cmd 'repeat-map 'isearch-repeat-map))
 
 
-    (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
-    (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
-    ;;(global-set-key (kbd "<escape>") #'god-mode-all)
-    (define-key input-decode-map [?\C-i] [C-i])
-    (global-set-key (kbd "<C-i>") #'god-mode-all)
-    (define-key god-local-mode-map (kbd ".") #'repeat))
+      (define-key isearch-mode-map (kbd "'") 'isearch-exit)
+      (define-key isearch-mode-map (kbd ";") 'avy-isearch)
 
-  (defun my-god-mode-update-nav-state ()
-    (if fast-nav-mode (fast-nav-mode -1)))
+      (use-package god-mode
+        :ensure t
+        :config
+        (setq god-exempt-major-modes nil)
+        (setq god-exempt-predicates nil)
+        (global-set-key (kbd "C-x C-1") #'delete-other-windows)
+        (global-set-key (kbd "C-x C-2") #'split-window-below)
+        (global-set-key (kbd "C-x C-3") #'split-window-right)
+        (global-set-key (kbd "C-x C-0") #'delete-window)
+        (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+        (define-key god-local-mode-map (kbd "i") #'god-mode-all)
+        ;; (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
+        ;;  (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
 
-  (add-hook 'god-mode-disabled-hook #'my-god-mode-update-nav-state)
+        (global-set-key (kbd "C-k") #'kmacro-toggle-start-end)
+        (global-set-key (kbd "C-c m") #'imenu)
 
-  ;; must be loaded after god mode to prevent key conflicts
-  (define-minor-mode fast-nav-mode
-    "Minor mode to rapidly move over large sections of code"
-    :lighter "Fast-nav"
-    :keymap (let ((map (make-keymap)))
-              (define-key map (kbd "j") 'forward-sexp)
-              (define-key map (kbd "t") 'origami-toggle-node)
-              (define-key map (kbd "T") 'origami-toggle-all-nodes)
-              (define-key map (kbd "k") 'backward-sexp)
-              (define-key map (kbd "d") 'down-list)
-              (define-key map (kbd "u") 'up-list)
-              (define-key map (kbd "m") 'consult-mark)
-              (define-key map (kbd "f") 'forward-paragraph)
-              (define-key map (kbd "b") 'backward-paragraph)
-              (define-key map (kbd "n") 'fast-nav-mode)
-              map))
+        (define-key god-local-mode-map (kbd "f") (kbd "C-l"))
+        (define-key god-local-mode-map (kbd "h") (kbd "C-b"))
+        (define-key god-local-mode-map (kbd "l") (kbd "C-f"))
+  
+        (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
+        (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
 
-  (use-package key-chord
-    :ensure t
-    :init (key-chord-mode 1)
-    :config
-    (key-chord-define-global "ii" 'god-mode-all)
-    (key-chord-define-global "xs" 'save-buffer)
-    (key-chord-define god-local-mode-map "jl" 'avy-goto-line)
-    (key-chord-define god-local-mode-map "jw" 'ace-window)
-    (key-chord-define god-local-mode-map "je" 'avy-goto-end-of-line)
-    (key-chord-define god-local-mode-map "jk" 'avy-goto-char)
-    ;;(key-chord-define isearch-mode-map "jj" #'god-mode-isearch-activate)
-    (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
-    (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
+        (define-key god-local-mode-map (kbd "%") #'match-paren)
+
+        (define-key god-local-mode-map (kbd "b") #'backward-word)
+
+        (define-key god-local-mode-map (kbd "n") #'fast-nav-mode)
+
+        (define-key god-local-mode-map (kbd "w") #'forward-word)
+        (define-key god-local-mode-map (kbd ";") #'avy-goto-char)
+        ;;(define-key god-local-mode-map (kbd "p") #'kmacro-toggle-start-end)
+
+        (global-unset-key "\C-d")
+        (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
+        (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
+        (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
+        (define-key god-local-mode-map (kbd "C-d C-s") #'zap-to-char)
+        (define-key god-local-mode-map (kbd "C-d C-S-s") #'(lambda (char) (interactive "cZap back to char: ") (zap-to-char -1 char)))
+
+
+        (require 'god-mode-isearch)
+        ;;(define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
+        (define-key isearch-mode-map (kbd "C-,") #'god-mode-isearch-activate)
+        (define-key god-mode-isearch-map (kbd "C-,") #'god-mode-isearch-disable)
+        ;; (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
+
+
+        (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
+        (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
+        ;;(global-set-key (kbd "<escape>") #'god-mode-all)
+        (define-key input-decode-map [?\C-i] [C-i])
+        (global-set-key (kbd "<C-i>") #'god-mode-all)
+        (define-key god-local-mode-map (kbd ".") #'repeat))
+
+      (defun my-god-mode-update-nav-state ()
+        (if fast-nav-mode (fast-nav-mode -1)))
+
+      (add-hook 'god-mode-disabled-hook #'my-god-mode-update-nav-state)
+
+      ;; must be loaded after god mode to prevent key conflicts
+      (define-minor-mode fast-nav-mode
+        "Minor mode to rapidly move over large sections of code"
+        :lighter "Fast-nav"
+        :keymap (let ((map (make-keymap)))
+                  (define-key map (kbd "j") 'forward-sexp)
+                  (define-key map (kbd "t") 'origami-toggle-node)
+                  (define-key map (kbd "T") 'origami-toggle-all-nodes)
+                  (define-key map (kbd "k") 'backward-sexp)
+                  (define-key map (kbd "d") 'down-list)
+                  (define-key map (kbd "u") 'up-list)
+                  (define-key map (kbd "m") 'consult-mark)
+                  (define-key map (kbd "f") 'forward-paragraph)
+                  (define-key map (kbd "b") 'backward-paragraph)
+                  (define-key map (kbd "n") 'fast-nav-mode)
+                  map))
+
+      (use-package key-chord
+        :ensure t
+        :init (key-chord-mode 1)
+        :config
+        (key-chord-define-global "ii" 'god-mode-all)
+        (key-chord-define-global "xs" 'save-buffer)
+        (key-chord-define god-local-mode-map "jl" 'avy-goto-line)
+        (key-chord-define god-local-mode-map "jw" 'ace-window)
+        (key-chord-define god-local-mode-map "je" 'avy-goto-end-of-line)
+        (key-chord-define god-local-mode-map "jk" 'avy-goto-char-2)
+        ;;(key-chord-define isearch-mode-map "jj" #'god-mode-isearch-activate)
+        (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
+        (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
 
 #+END_SRC
 
@@ -191,6 +219,8 @@
   (use-package origami
     :ensure t
     :config (global-origami-mode))
+
+  (repeat-mode)
 
   (use-package super-save
   :ensure t
@@ -203,7 +233,12 @@
   ;; (set-frame-parameter (selected-frame) 'alpha '(90 90))
   ;; (add-to-list 'default-frame-alist '(alpha 90 90))
   (menu-bar-mode -1) 
-  (load-theme 'darktooth :no-confirm)
+
+  (use-package solarized-themes
+    :config
+    (setq solarized-high-contrast-mode-line t))
+
+  (load-theme 'solarized-zenburn :no-confirm)
 
     (use-package all-the-icons
       :ensure t)
@@ -229,55 +264,59 @@
 
 * emacs completion frameworks
 #+BEGIN_SRC emacs-lisp
-  (defun dw/minibuffer-backward-kill (arg)
-    "When minibuffer is completing a file name delete up to parent
-  folder, otherwise delete a word"
-    (interactive "p")
-    (if minibuffer-completing-file-name
-        ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
-        (if (string-match-p "./" (minibuffer-contents))
-            (zap-up-to-char (- arg) ?/)
-          (delete-minibuffer-contents))
-      (delete-backward-char arg)))
+    (defun dw/minibuffer-backward-kill (arg)
+      "When minibuffer is completing a file name delete up to parent
+    folder, otherwise delete a word"
+      (interactive "p")
+      (if minibuffer-completing-file-name
+          ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+          (if (string-match-p "./" (minibuffer-contents))
+              (zap-up-to-char (- arg) ?/)
+            (delete-minibuffer-contents))
+        (delete-backward-char arg)))
 
-  (defhydra hydra-vertico-next ()
-    "move around mini buffer"
-    ("j" vertico-next "next")
-    ("k" vertico-previous "previous"))
+  (defvar vertico-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "j") #'vertico-next)
+      (define-key map (kbd "k") #'vertico-previous)
+      map))
 
-  (use-package vertico
-    :ensure t
-    :bind (:map vertico-map
-           ("C-j" . hydra-vertico-next/vertico-next)
-           ("C-k" . vertico-previous)
-           ("C-f" . vertico-exit)
-           :map minibuffer-local-map
-           ("DEL" . dw/minibuffer-backward-kill))
-    :custom
-    (vertico-cycle t)
-    :init
-    (vertico-mode))
+  (dolist (cmd '(vertico-next vertico-previous))
+    (put cmd 'repeat-map 'vertico-repeat-map))
 
-  (use-package orderless
-    :ensure t
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-overrides '((file (styles basic partial-completion)))))
+    (use-package vertico
+      :ensure t
+      :bind (:map vertico-map
+             ("C-j" . vertico-next)
+             ("C-k" . vertico-previous)
+             ("C-f" . vertico-exit)
+             :map minibuffer-local-map
+             ("DEL" . dw/minibuffer-backward-kill))
+      :custom
+      (vertico-cycle t)
+      :init
+      (vertico-mode))
 
-  (defun dw/get-project-root ()
-    (when (fboundp 'projectile-project-root)
-      (projectile-project-root)))
+    (use-package orderless
+      :ensure t
+      :custom
+      (completion-styles '(orderless basic))
+      (completion-category-overrides '((file (styles basic partial-completion)))))
 
-  (setq completion-ignore-case  t)
+    (defun dw/get-project-root ()
+      (when (fboundp 'projectile-project-root)
+        (projectile-project-root)))
 
-  (setq read-file-name-completion-ignore-case t
-        read-buffer-completion-ignore-case t
-        completion-ignore-case t)
+    (setq completion-ignore-case  t)
 
-  (use-package marginalia
-    :ensure t
-    :config
-    (marginalia-mode))
+    (setq read-file-name-completion-ignore-case t
+          read-buffer-completion-ignore-case t
+          completion-ignore-case t)
+
+    (use-package marginalia
+      :ensure t
+      :config
+      (marginalia-mode))
 #+END_SRC
 
 * searching
@@ -377,10 +416,27 @@
             ;; `completion-at-point' is often bound to M-TAB.
             (setq tab-always-indent 'complete))
 
-  (defhydra hydra-corfu-next ()
-    "move around autocomplete"
-    ("j" corfu-next "next")
-    ("k" corfu-previous "previous"))
+  (use-package cape
+    :init
+    ;; Add `completion-at-point-functions', used by `completion-at-point'.
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file))
+
+  (use-package eglot
+    :ensure t
+    :commands (eglot eglot-ensure)
+    :hook ((clojure-mode . eglot-ensure)
+           (js-mode . eglot-ensure)))
+
+
+  (defvar corfu-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "j") #'corfu-next)
+      (define-key map (kbd "k") #'corfu-previous)
+      map))
+
+  (dolist (cmd '(corfu-next corfu-previous))
+    (put cmd 'repeat-map 'corfu-repeat-map))
 
   (use-package corfu
     ;; Optional customizations
@@ -393,20 +449,8 @@
      :config
      (global-corfu-mode)
      :bind
-     (:map corfu-map ("C-j" . hydra-corfu-next/corfu-next)))
-
-
-  (use-package cape
-    :init
-    ;; Add `completion-at-point-functions', used by `completion-at-point'.
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-    (add-to-list 'completion-at-point-functions #'cape-file))
-
-  (use-package eglot
-    :ensure t
-    :commands (eglot eglot-ensure)
-    :hook ((clojure-mode . eglot-ensure)
-           (js-mode . eglot-ensure)))
+     (:map corfu-map ("C-j" . corfu-next)))
+  
 #+END_SRC
 
 * org
