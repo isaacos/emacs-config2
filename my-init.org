@@ -1,227 +1,141 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
-      (use-package which-key-mode
-        :init (which-key-mode)
-        (which-key-enable-god-mode-support)
-        :diminish which-key-mode
-        :config
-        (setq which-key-idle-delay 0.3))
+                (use-package which-key
+                  :init (which-key-mode)
+                  (which-key-enable-god-mode-support)
+                  :diminish which-key-mode
+                  :config
+                  (setq which-key-idle-delay 0.3))
 
-      (global-unset-key "\C-d")
-      (global-set-key (kbd "C-x m") #'eshell)
+                ;;(global-unset-key "\C-d")
+                (global-set-key (kbd "C-x m") #'eshell)
+                ;; allows user to paste inside minibuffer
+                ;;(define-key minibuffer-local-map (kbd "C-p") 'yank)
 
-      (use-package browse-kill-ring
-        :bind (("M-y" . browse-kill-ring)))
+                (defun match-paren (arg)
+                  "Go to the matching paren if on a paren; otherwise insert %."
+                  (interactive "p")
+                  (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+                        ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+                        (t (self-insert-command (or arg 1)))))
 
-      (use-package crux
-        :bind (("C-a" . crux-move-beginning-of-line)
-               ("C-o" . crux-smart-open-line)
-               ("C-S-o" . crux-smart-open-line-above)))
+                (use-package avy
+                  :init
+                  (setq avy-all-windows 'all-frames)
+                  (setq avy-style 'at)
+                  (setq avy-highlight-first t)
+                  (setq avy-styles-alist '((avy-goto-char . at)
+                     (avy-goto-line . at-full)
+                     (avy-goto-end-of-line . post)))
+                  (setq avy-keys '(?a ?s ?d ?g ?h ?j ?k ?l ?\;))
+                  :config
+                  (global-set-key (kbd "C-c j m") #'avy-pop-mark))
 
-      (use-package selected
-        :ensure t
-        :commands selected-minor-mode
-        :init
-        (selected-global-mode)
-        (setq selected-org-mode-map (make-sparse-keymap))
-        :bind (:map selected-keymap
-                    ("C-q" . selected-off)
-                    ("u" . upcase-region)
-                    ("M-l" . downcase-region)
-                    ("C-d C-r" . kill-region)
-                    ("C-w" . copy-region-as-kill)
-                    ("m" . apply-macro-to-region-lines)
-                    ;;("C-S-'" . er/mark-inside-quotes)
-                    ;;("C-%" . anzu-isearch-query-replace)
-                    :map selected-org-mode-map
-                    ("t" . org-table-convert-region)))
+                (use-package anzu
+                  :ensure t
+                  :config
+                  (global-anzu-mode +1)
+                  (custom-set-variables
+                    '(anzu-mode-lighter "")
+                    '(anzu-replace-to-string-separator " => ")))
+  
+                (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+                (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+  (global-set-key (kbd "H-r") 'anzu-query-replace-at-cursor)
 
-      (use-package expand-region
-        :bind ("C-=" .  er/expand-region))
+    (use-package ace-window
+      :ensure t
+      :config
+      (global-set-key (kbd "C-x o") 'ace-window)
+      ;;customize to make face more visible
+      (custom-set-faces
+       '(aw-leading-char-face
+         ((t (:foreground "white" :background "#e52b50" :height 3.0)))))
 
-      (defun match-paren (arg)
-        "Go to the matching paren if on a paren; otherwise insert %."
-        (interactive "p")
-        (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-              ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-              (t (self-insert-command (or arg 1)))))
-
-      (defun dwim/goto-char (arg char)
-        "Move pointer up to and including ARG'th occurrence of CHAR.
-            Case is ignored if `case-fold-search' is non-nil in the current buffer.
-            Goes backward if ARG is negative; error if CHAR not found."
-        (interactive "p\ncchar: ")
-        (if (char-table-p translation-table-for-input)
-            (setq char (or (aref translation-table-for-input char) char)))
-        (progn (search-forward (char-to-string char)
-                               nil nil arg) (point)))
-
-      (use-package avy
-        :init
-        (setq avy-all-windows 'all-frames)
-        (setq avy-style 'at-full)
-        ;; (setq avy-styles-alist '((avy-goto-char . post)
-        ;;                          (avy-goto-line . at-full)
-        ;;                          (avy-goto-end-of-line . post)
-        ;;                          ))
-        (setq avy-keys '(?j ?k ?l ?\; ?n ?i ?o ?s ?d ?f ?g ?h )))
-
-      (use-package anzu
-        :ensure t
-        :config
-        (global-anzu-mode +1))
-      (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-      (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
-
-      (use-package ace-window
-        :ensure t
-        :config
-        (global-set-key (kbd "C-x o") 'ace-window)
-     ;;customize to make face more visible
-        (custom-set-faces
-    '(aw-leading-char-face
-      ((t (:foreground "white" :background "#e52b50" :height 3.0)))))
-
-        ;; (defface aw-leading-char-face
+      ;; (defface aw-leading-char-face
       ;; '((((class color)) (:foreground "white"))
       ;;   (((background dark)) (:foreground "#e52b50"))
       ;;   (((background light)) (:foreground "gray0"))
       ;;   (t (:foreground "gray100" :underline nil)))
       ;; "Face for each window's leading char.")
-        (setq aw-keys '(?s ?d ?f ?g ?h ?k ?l)))
+      (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
 
-      (use-package smartparens
-        :ensure t
-        :config
-        (global-set-key (kbd "C->") #'sp-forward-slurp-sexp)
-        (global-set-key (kbd "C-<") #'sp-forward-barf-sexp))
+    (use-package puni
+    ;;:defer t
+    :config
+    (global-set-key (kbd "C->") #'puni-slurp-forward)
+    (global-set-key (kbd "C-<") #'puni-barf-forward))
 
-      (use-package hydra
-        :ensure t)
+  (use-package hydra
+    :ensure t)
 
-      (defun kmacro-toggle-start-end ()
-        "Starts kmacro unless one is already in progress than it ends it"
-        (interactive)
-        (if defining-kbd-macro
-            (kmacro-end-macro 1)
-          (kmacro-start-macro 0)))
+  (defun kmacro-toggle-start-end ()
+    "Starts kmacro unless one is already in progress than it ends it"
+    (interactive)
+    (if defining-kbd-macro
+        (kmacro-end-macro 1)
+      (kmacro-start-macro 0)))
 
+      ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.el"))
+    (org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
+    ;;(org-babel-load-file (expand-file-name "~/.emacs.d/meow-config.el"))
 
-      (defvar isearch-repeat-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "s") #'isearch-repeat-forward)
-          (define-key map (kbd "r") #'isearch-repeat-backward)
-          map))
+          (defun run-arg-in-god-mode (arg key-arg)
+            (interactive "p")
 
-      (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward))
-        (put cmd 'repeat-map 'isearch-repeat-map))
+            (if god-local-mode
+              (funcall (key-binding (eval key-arg)))
+              (self-insert-command (or arg 1))))
 
+              (define-minor-mode fast-nav-mode
+                  "Minor mode to rapidly move over large sections of code"
+                  :lighter "Fast-nav"
+                  :keymap (let ((map (make-keymap)))
+                            (define-key map (kbd "j") 'forward-sexp)
+                            (define-key map (kbd "t") 'hs-toggle-hiding)
+                            (define-key map (kbd "T") 'hs-hide-all)
+                            (define-key map (kbd "k") 'backward-sexp)
+                            (define-key map (kbd "d") 'down-list)
+                            (define-key map (kbd "u") 'up-list)
+                            (define-key map (kbd "m") 'consult-mark)
+                            (define-key map (kbd "f") 'forward-paragraph)
+                            (define-key map (kbd "b") 'backward-paragraph)
+                            (define-key map (kbd "n") 'fast-nav-mode)
+                            map))
 
-      (define-key isearch-mode-map (kbd "'") 'isearch-exit)
-      (define-key isearch-mode-map (kbd ";") 'avy-isearch)
-
-      (use-package god-mode
-        :ensure t
-        :config
-        (setq god-exempt-major-modes nil)
-        (setq god-exempt-predicates nil)
-        (global-set-key (kbd "C-x C-1") #'delete-other-windows)
-        (global-set-key (kbd "C-x C-2") #'split-window-below)
-        (global-set-key (kbd "C-x C-3") #'split-window-right)
-        (global-set-key (kbd "C-x C-0") #'delete-window)
-        (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
-        (define-key god-local-mode-map (kbd "i") #'god-mode-all)
-        ;; (define-key god-local-mode-map (kbd "f") #'dwim/goto-char)
-        ;;  (define-key god-local-mode-map (kbd "F") #'(lambda (char) (interactive "cchar: ") (dwim/goto-char -1 char)))
-
-        (global-set-key (kbd "C-k") #'kmacro-toggle-start-end)
-        (global-set-key (kbd "C-c m") #'imenu)
-
-        (define-key god-local-mode-map (kbd "f") (kbd "C-l"))
-        (define-key god-local-mode-map (kbd "h") (kbd "C-b"))
-        (define-key god-local-mode-map (kbd "l") (kbd "C-f"))
-  
-        (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
-        (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
-
-        (define-key god-local-mode-map (kbd "%") #'match-paren)
-
-        (define-key god-local-mode-map (kbd "b") #'backward-word)
-
-        (define-key god-local-mode-map (kbd "n") #'fast-nav-mode)
-
-        (define-key god-local-mode-map (kbd "w") #'forward-word)
-        (define-key god-local-mode-map (kbd ";") #'avy-goto-char)
-        ;;(define-key god-local-mode-map (kbd "p") #'kmacro-toggle-start-end)
-
-        (global-unset-key "\C-d")
-        (global-set-key  (kbd "C-d C-d") #'crux-smart-kill-line)
-        (define-key god-local-mode-map (kbd "C-d C-l") #'delete-forward-char)
-        (define-key god-local-mode-map (kbd "C-d C-h") #'delete-backward-char)
-        (define-key god-local-mode-map (kbd "C-d C-s") #'zap-to-char)
-        (define-key god-local-mode-map (kbd "C-d C-S-s") #'(lambda (char) (interactive "cZap back to char: ") (zap-to-char -1 char)))
-
-
-        (require 'god-mode-isearch)
-        ;;(define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
-        (define-key isearch-mode-map (kbd "C-,") #'god-mode-isearch-activate)
-        (define-key god-mode-isearch-map (kbd "C-,") #'god-mode-isearch-disable)
-        ;; (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
-
-
-        (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
-        (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
-        ;;(global-set-key (kbd "<escape>") #'god-mode-all)
-        (define-key input-decode-map [?\C-i] [C-i])
-        (global-set-key (kbd "<C-i>") #'god-mode-all)
-        (define-key god-local-mode-map (kbd ".") #'repeat))
-
-      (defun my-god-mode-update-nav-state ()
-        (if fast-nav-mode (fast-nav-mode -1)))
-
-      (add-hook 'god-mode-disabled-hook #'my-god-mode-update-nav-state)
-
-      ;; must be loaded after god mode to prevent key conflicts
-      (define-minor-mode fast-nav-mode
-        "Minor mode to rapidly move over large sections of code"
-        :lighter "Fast-nav"
-        :keymap (let ((map (make-keymap)))
-                  (define-key map (kbd "j") 'forward-sexp)
-                  (define-key map (kbd "t") 'origami-toggle-node)
-                  (define-key map (kbd "T") 'origami-toggle-all-nodes)
-                  (define-key map (kbd "k") 'backward-sexp)
-                  (define-key map (kbd "d") 'down-list)
-                  (define-key map (kbd "u") 'up-list)
-                  (define-key map (kbd "m") 'consult-mark)
-                  (define-key map (kbd "f") 'forward-paragraph)
-                  (define-key map (kbd "b") 'backward-paragraph)
-                  (define-key map (kbd "n") 'fast-nav-mode)
-                  map))
-
-      (use-package key-chord
-        :ensure t
-        :init (key-chord-mode 1)
-        :config
-        (key-chord-define-global "ii" 'god-mode-all)
-        (key-chord-define-global "xs" 'save-buffer)
-        (key-chord-define god-local-mode-map "jl" 'avy-goto-line)
-        (key-chord-define god-local-mode-map "jw" 'ace-window)
-        (key-chord-define god-local-mode-map "je" 'avy-goto-end-of-line)
-        (key-chord-define god-local-mode-map "jk" 'avy-goto-char-2)
-        ;;(key-chord-define isearch-mode-map "jj" #'god-mode-isearch-activate)
-        (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
-        (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
-
+                (use-package key-chord
+                  :ensure t
+                  :init (key-chord-mode 1)
+                  :config
+                  (key-chord-define-global "ii" 'god-mode-all)
+                  (key-chord-define-global "xs" 'save-buffer)
+                  (key-chord-define-global "jl" 'avy-goto-line)
+                  (key-chord-define-global "jw" 'ace-window)
+                  (key-chord-define-global "je" 'avy-goto-end-of-line)
+                  (key-chord-define-global "jk" 'avy-goto-char)
+                  (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
+                  (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
 #+END_SRC
 
 * Defaults
 #+BEGIN_SRC emacs-lisp
-  (use-package origami
-    :ensure t
-    :config (global-origami-mode))
+  (use-package hideshow)
 
   (repeat-mode)
 
+  (setq-default isearch-yank-on-move t)
+  (setq-default set-mark-command-repeat-pop t)
+
+  (use-package zop-to-char
+    :config
+    (global-set-key (kbd "C-z") #'zop-up-to-char))
+
+(use-package winner
+  :config
+  (winner-mode 1)
+  :bind (("C-c w /" . winner-undo)
+         ("C-c w _" . winner-redo)))
+  
   (use-package super-save
   :ensure t
   :config
@@ -229,37 +143,51 @@
 #+END_SRC
 * appearance
 #+BEGIN_SRC emacs-lisp
-  ;; sets frame transparency
-  ;; (set-frame-parameter (selected-frame) 'alpha '(90 90))
-  ;; (add-to-list 'default-frame-alist '(alpha 90 90))
-  (menu-bar-mode -1) 
+   (menu-bar-mode -1) 
 
-  (use-package solarized-themes
-    :config
-    (setq solarized-high-contrast-mode-line t))
+   (use-package solarized-theme
+     :config
+     (setq solarized-high-contrast-mode-line nil))
 
-  (load-theme 'solarized-zenburn :no-confirm)
+  (load-theme 'doom-zenburn :no-confirm)
 
-    (use-package all-the-icons
-      :ensure t)
+     (use-package all-the-icons
+       :ensure t)
 
-    (use-package doom-modeline
+      (use-package doom-modeline
+        :ensure t
+        :init
+        :hook (after-init . doom-modeline-mode)
+        :config
+        ;;(setq doom-modeline-hud t)
+        (setq doom-modeline-minor-modes t)
+        (setq doom-modeline-buffer-encoding nil))
+
+     (use-package rainbow-delimiters
       :ensure t
-      :init
-      :hook (after-init . doom-modeline-mode)
-      :config
-      (setq doom-modeline-buffer-encoding nil))
-
-    (use-package rainbow-delimiters
-     :ensure t
-     :defer t
-     :hook (prog-mode . rainbow-delimiters-mode))
+      :defer t
+      :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 * projects
 #+BEGIN_SRC emacs-lisp
     (use-package projectile
       :ensure t)
+#+END_SRC
+
+* Git
+#+BEGIN_SRC emacs-lisp
+        (use-package magit
+          :ensure t
+          :defer t
+          :commands (magit-status magit-get-current-branch)
+          :custom
+          (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+        (use-package diff-hl
+          :ensure t
+          :init
+          (global-diff-hl-mode))
 #+END_SRC
 
 * emacs completion frameworks
@@ -344,17 +272,17 @@
     (setq denote-directory (expand-file-name "/home/isaac/denote/"))
     (setq denote-file-type nil))
 
-  (add-hook 'dired-mode-hook #'denote-dired-mode)
+  ;;(add-hook 'dired-mode-hook #'denote-dired-mode)
 
   (use-package consult-notes
     ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
     :commands (consult-notes consult-notes-search-in-all-notes)
     :config
-    (setq consult-notes-file-dir-sources '(("Name"  key  "/home/isaac/denote/")))  ;; Set notes dir(s), see below
-    (global-set-key (kbd "C-x C-n") nil)
-    (global-set-key (kbd "C-x C-n C-s") #'consult-notes)
-      (global-set-key (kbd "C-x C-n C-d") #'denote)
-    
+    (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
+    ;;(global-unset-key (kbd "C-x C-n") nil)
+    ;;(global-set-key (kbd "C-x n s") #'consult-notes)
+    ;;(global-set-key (kbd "C-x n d") #'denote)
+
     ;; Set org-roam integration OR denote integration, e.g.:
     (when (locate-library "denote")
       (consult-notes-denote-mode)))
@@ -402,32 +330,132 @@
   (cider-repl-toggle-pretty-printing))
 #+END_SRC
 
+* Javascript/Typescript
+- TODO look into auto importing for JS
+  - [[eww: https://github.com/KarimAziev/js-imports][JS imports]]
+  - Switching to lsp-mode with lsp-completion-enable-additional-text-edit
+  - adding a jsconfig to the project
+- TODO linting issue
+  - [[eww:http://mitchgordon.me/software/2021/06/28/why-vscode-eslint-fast.html][flycheck-mode article]]
+    
+#+BEGIN_SRC emacs-lisp
+    (use-package js2-mode
+      :ensure t)
+
+  (use-package prettier-js
+    :ensure t
+    :after (rjsx-mode)
+    :hook (rjxs . prettier-js-mode))
+
+    (add-hook 'js-mode-hook 'prettier-js-mode)
+    (add-hook 'web-mode-hook 'prettier-js-mode)
+  (add-hook 'rjxs-mode 'prettier-js-mode)
+
+    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+    ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+    ;; (add-hook 'js-mode-hook 'js2-minor-mode)
+
+    (use-package js-mode
+      :init
+      (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+      (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+
+    (use-package rjsx-mode
+      :ensure t)
+  
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+
+  ;; (defun setup-tide-mode ()
+  ;;   "Sets up tide"
+  ;;   (interactive)
+  ;;   (tide-setup)
+  ;;   (flycheck-mode +1)
+  ;;   (tide-hl-identifier-mode +1))
+
+  ;; (use-package tide
+  ;;   :ensure t
+  ;;   :after (rjsx-mode corfu-mode flycheck)
+  ;;   :hook (rjsx-mode . setup-tide-mode))
+
+  ;;   (with-eval-after-load 'js-mode
+  ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+  ;;            (setq completion-category-defaults nil))
+
+#+END_SRC
+
+* LSP
+#+BEGIN_SRC emacs-lisp
+            (use-package eglot
+                  :ensure t
+                  :commands (eglot eglot-ensure)
+                  :config
+                  (define-key eglot-mode-map (kbd "M-.") #'xref-find-definitions)
+                  :hook ((clojure-mode . eglot-ensure)
+                         ;;(js-mode . eglot-ensure)
+                         ))
+            ;; Option 1: Specify explicitly to use Orderless for Eglot
+
+              (setq completion-category-overrides '((eglot (styles orderless))))
+
+              (use-package consult-eglot
+                :ensure t)
+
+          (global-tree-sitter-mode)
+    (add-hook 'js-mode-hook #'tree-sitter-hl-mode)
+
+      (use-package lsp-mode
+        :commands lsp
+        :hook ((
+                web-mode
+                rjsx-mode
+                ;; javascript-ts-mode
+                ;; typescript-ts-mode
+                ;; jsx-ts-mode
+                ;; tsx-ts-mode
+                )
+               . lsp-deferred)
+        (lsp-completion-mode . my/lsp-mode-setup-completion)
+        (lsp-mode . lsp-enable-which-key-integration)
+        :config
+        (setq lsp-idle-delay 0.1
+              lsp-log-io nil
+              lsp-completion-provider :none
+              lsp-headerline-breadcrumb-enable nil
+              lsp-solargraph-use-bundler 't)
+        :init
+        (defun my/orderless-dispatch-flex-first (_pattern index _total)
+          (and (eq index 0) 'orderless-flex))
+
+        (defun my/lsp-mode-setup-completion ()
+          (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                '(orderless)))
+        
+  ;;specific for JavaScript and requires VSCode
+  (setq lsp-eslint-server-command 
+     '("node" 
+       "/home/isaac/.vscode-oss/extensions/dbaeumer.vscode-eslint-2.4.0/server/out/eslintServer.js" 
+       "--stdio"))
+
+        ;; Optionally configure the first word as flex filtered.
+        (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+        ;; Optionally configure the cape-capf-buster.
+        (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+        (setq lsp-keymap-prefix "C-l"))
+
+
+        (add-hook 'lua-mode-hook #'tree-sitter-hl-mode)
+        (add-hook 'sh-mode-hook #'tree-sitter-hl-mode)
+
+#+END_SRC
 * autocomplete
 #+BEGIN_SRC emacs-lisp
-  (use-package emacs
-    :init
-    ;; TAB cycle if there are only few candidates
-    (setq completion-cycle-threshold 1)
-            ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-            ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-            ;; (setq read-extended-command-predicate
-            ;;       #'command-completion-default-include-p)
-            ;; Enable indentation+completion using the TAB key.
-            ;; `completion-at-point' is often bound to M-TAB.
-            (setq tab-always-indent 'complete))
 
   (use-package cape
     :init
     ;; Add `completion-at-point-functions', used by `completion-at-point'.
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
     (add-to-list 'completion-at-point-functions #'cape-file))
-
-  (use-package eglot
-    :ensure t
-    :commands (eglot eglot-ensure)
-    :hook ((clojure-mode . eglot-ensure)
-           (js-mode . eglot-ensure)))
-
 
   (defvar corfu-repeat-map
     (let ((map (make-sparse-keymap)))
@@ -446,74 +474,129 @@
      (corfu-auto-delay 0)
      (corfu-auto-prefix 1)
      (corfu-separator ?\s)          ;; Orderless field separator
-     :config
+     :init
      (global-corfu-mode)
      :bind
      (:map corfu-map ("C-j" . corfu-next)))
+
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+
   
+    (setq completion-cycle-threshold 1)
+            ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+            ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+            ;; (setq read-extended-command-predicate
+            ;;       #'command-completion-default-include-p)
+            ;; Enable indentation+completion using the TAB key.
+            ;; `completion-at-point' is often bound to M-TAB.
+            (setq tab-always-indent 'complete))
+
+
 #+END_SRC
 
 * org
 #+BEGIN_SRC emacs-lisp
 
-  (use-package org-bullets
-  :after org
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+  (setq ispell-program-name "/usr/bin/hunspell")
 
-;; renames buffer when the name starts with title
-(defun org+-buffer-name-to-title ()
-  "Rename buffer to value of #+title:."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
-      (rename-buffer (match-string 1)))))
+  (setq ispell-hunspell-dict-paths-alist
 
-(add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+  '(("en_US" "~/Library/Spelling/en_US.aff")))
 
-    ;; Turn on indentation and auto-fill mode for Org files
-  (defun dw/org-mode-setup ()
-    (org-bullets-mode)
-    (org-indent-mode)
-  ;;  (variable-pitch-mode 1)
-    (auto-fill-mode 0)
-    (visual-line-mode 1)
-    ;; (setq evil-auto-indent nil)
-    ;; (company-ispell)
+  (setq ispell-local-dictionary "en_US")
 
-    (add-to-list 'completion-at-point-functions #'cape-ispell)
-    (org+-buffer-name-to-title)
-    )
+  (setq ispell-local-dictionary-alist
 
+  ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
 
-  (use-package org
-    :defer t
-    :hook (org-mode . dw/org-mode-setup)
-    :config
-    (setq org-agenda-start-with-log-mode t)
-    (setq org-log-done `time)
-    (setq org-log-into-drawer t))
+  ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+
+  '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
+
+      (use-package org-bullets
+      :after org
+      :hook (org-mode . org-bullets-mode)
+      :custom
+      (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+    ;; renames buffer when the name starts with title
+    (defun org+-buffer-name-to-title ()
+      "Rename buffer to value of #+title:."
+      (interactive)
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+          (rename-buffer (match-string 1)))))
+
+    (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+  (setq cape-dict-file "~/Library/Spelling/en_US.dic")
+        ;; Turn on indentation and auto-fill mode for Org files
+      (defun dw/org-mode-setup ()
+        (org-bullets-mode)
+        (org-indent-mode)
+      ;;  (variable-pitch-mode 1)
+        (auto-fill-mode 0)
+        (visual-line-mode 1)
+        ;; (setq evil-auto-indent nil)
+        ;; (company-ispell)
+
+        (add-to-list 'completion-at-point-functions #'cape-ispell)
+        (add-to-list 'completion-at-point-functions #'cape-dict)
+        (org+-buffer-name-to-title)
+        )
+
+      (use-package org
+        :defer t
+        :hook (org-mode . dw/org-mode-setup)
+        :config
+        (setq org-agenda-start-with-log-mode t)
+        (setq org-log-done `time)
+        (setq org-log-into-drawer t))
 #+END_SRC
 
 * PDF
 #+BEGIN_SRC emacs-lisp
-  (setq doc-view-continuous t)
+    (setq doc-view-continuous t)
 
-    (add-hook 'doc-view-mode-hook
-    (lambda ()
-     (local-set-key (kbd "n") 'doc-view-scroll-down-or-previous-page)
-     (local-set-key (kbd "p") 'doc-view-scroll-up-or-next-page)))
+      (add-hook 'doc-view-mode-hook (lambda ()
+                                      (local-set-key (kbd "C-j") 'doc-view-next-line-or-next-page) (local-set-key (kbd
+      "C-k") 'doc-view-previous-line-or-previous-page)))
 
 
-  ;; (use-package pdf-tools
-  ;;   :defer t)
+  ;; (add-hook 'doc-view-mode-hook
 
-  ;; (add-hook 'pdf-view-mode-hook
-  ;;           (lambda ()
-  ;;             (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
-  ;;             (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+  
+  ;;   (lambda ()
+  ;;     (message "you are now in doc-view mode")
+  ;;    (define-key evil-normal-state-local-map (kbd "k") 'doc-view-previous-line-or-previous-page)
+  ;;    (define-key evil-normal-state-local-map (kbd "j") 'doc-view-next-line-or-next-page)))
+
+
+  (use-package pdf-tools
+    :defer t)
+
+  (add-hook 'pdf-view-mode-hook
+            (lambda ()
+              (local-set-key (kbd "j") 'pdf-view-scroll-up-or-next-page)
+              (local-set-key (kbd "k") 'pdf-view-scroll-down-or-previous-page)))
+
+    ;; (use-package pdf-tools
+    ;;   :defer t)
+
+    ;; (add-hook 'pdf-view-mode-hook
+    ;;           (lambda ()
+    ;;             (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
+    ;;             (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+#+END_SRC
+
+* EWW
+#+BEGIN_SRC emacs-lisp
+  (use-package eww
+    :config
+    (define-key eww-mode-map (kbd "C-j") #'forward-paragraph)
+    (define-key eww-mode-map (kbd "C-k") #'backward-paragraph))
 #+END_SRC
 
 * Window Manager
