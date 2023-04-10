@@ -199,7 +199,7 @@ Version 2015-10-01"
 ;;                         map))
 
 
-(global-set-key (kbd "H-l") 'hydra-bracket-mov/body)
+(define-key prog-mode-map (kbd "H-l") 'hydra-bracket-mov/body)
 
 (defun xah-forward-right-bracket ()
   "Move cursor to the next occurrence of right bracket.
@@ -233,7 +233,7 @@ Version 2015-10-01"
 ^By List^             ^By Level^           ^Actions^  
 ^^^^^^^^----------------------------------------------
 _j_: next          _h_: higher        _SPC_: set-mark 
-_k_: prev          _l_: lower         ^ ^
+_k_: prev          _l_: lower         _m_: mark-sexp
 _e_: end-of        _a_: avy-word                ^ ^
 "
   ("q" nil)
@@ -242,7 +242,8 @@ _e_: end-of        _a_: avy-word                ^ ^
   ("h" backward-up-list)
   ("l" down-list)
   ("e" forward-list)
-  ("a" avy-goto-word-0-below-in-line)
+  ("a" avy-goto-word-1)
+  ("m" easy-mark-sexp)
   ("SPC" set-mark-command))
 
 (defun avy-extend-command (repeat-arg)
@@ -265,11 +266,12 @@ _e_: end-of        _a_: avy-word                ^ ^
     (avy-goto-open-brackets))))
 
 (global-set-key (kbd "H-j") #'avy-extend-command)
-(global-set-key (kbd "H-;") #'vimish-movement-mode)
+;(gglobal-set-key (kbd "H-;") #'vimish-movement-mode)
 ;;(global-set-key (kbd "H-l") #'bracket-movement-mode)
 ;; (global-set-key (kbd "H-n") #'forward-left-bracket)
 ;; (global-set-key (kbd "H-p") #'xah-backward-left-bracket)
 (global-set-key (kbd "H-s") #'avy-goto-char-timer)
+(global-set-key (kbd "H-i") #'imenu)
 
 
 ;; (global-set-key (kbd "H-h") #'(lambda () (interactive) (setq god-mod-alist '(
