@@ -38,7 +38,7 @@
                   (custom-set-variables
                     '(anzu-mode-lighter "")
                     '(anzu-replace-to-string-separator " => ")))
-  
+
                 (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
                 (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
   (global-set-key (kbd "H-r") 'anzu-query-replace-at-cursor)
@@ -50,7 +50,7 @@
       ;;customize to make face more visible
       (custom-set-faces
        '(aw-leading-char-face
-         ((t (:foreground "white" :background "#e52b50" :height 3.0)))))
+         ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
 
       ;; (defface aw-leading-char-face
       ;; '((((class color)) (:foreground "white"))
@@ -76,9 +76,8 @@
         (kmacro-end-macro 1)
       (kmacro-start-macro 0)))
 
-      ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.el"))
+
     (org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
-    ;;(org-babel-load-file (expand-file-name "~/.emacs.d/meow-config.el"))
 
           (defun run-arg-in-god-mode (arg key-arg)
             (interactive "p")
@@ -87,21 +86,21 @@
               (funcall (key-binding (eval key-arg)))
               (self-insert-command (or arg 1))))
 
-              (define-minor-mode fast-nav-mode
-                  "Minor mode to rapidly move over large sections of code"
-                  :lighter "Fast-nav"
-                  :keymap (let ((map (make-keymap)))
-                            (define-key map (kbd "j") 'forward-sexp)
-                            (define-key map (kbd "t") 'hs-toggle-hiding)
-                            (define-key map (kbd "T") 'hs-hide-all)
-                            (define-key map (kbd "k") 'backward-sexp)
-                            (define-key map (kbd "d") 'down-list)
-                            (define-key map (kbd "u") 'up-list)
-                            (define-key map (kbd "m") 'consult-mark)
-                            (define-key map (kbd "f") 'forward-paragraph)
-                            (define-key map (kbd "b") 'backward-paragraph)
-                            (define-key map (kbd "n") 'fast-nav-mode)
-                            map))
+              ;; (define-minor-mode fast-nav-mode
+              ;;     "Minor mode to rapidly move over large sections of code"
+              ;;     :lighter "Fast-nav"
+              ;;     :keymap (let ((map (make-keymap)))
+              ;;               (define-key map (kbd "j") 'forward-sexp)
+              ;;               (define-key map (kbd "t") 'hs-toggle-hiding)
+              ;;               (define-key map (kbd "T") 'hs-hide-all)
+              ;;               (define-key map (kbd "k") 'backward-sexp)
+              ;;               (define-key map (kbd "d") 'down-list)
+              ;;               (define-key map (kbd "u") 'up-list)
+              ;;               (define-key map (kbd "m") 'consult-mark)
+              ;;               (define-key map (kbd "f") 'forward-paragraph)
+              ;;               (define-key map (kbd "b") 'backward-paragraph)
+              ;;               (define-key map (kbd "n") 'fast-nav-mode)
+              ;;               map))
 
                 (use-package key-chord
                   :ensure t
@@ -141,32 +140,80 @@
   :config
   (super-save-mode +1))
 #+END_SRC
+
+* Dired
+#+BEGIN_SRC emacs-lisp
+ (use-package dirvish
+   :init
+   (dirvish-override-dired-mode)
+   :custom
+   (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+    '(("h" "~/"                          "Home")
+      ("d" "~/Downloads/"                "Downloads")))
+   :config
+   ;; (dirvish-peek-mode) ; Preview files in minibuffer
+   ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
+   (setq dirvish-mode-line-format
+         '(:left (sort symlink) :right (omit yank index)))
+   (setq dirvish-attributes
+         '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+   (setq delete-by-moving-to-trash t)
+   (setq dired-listing-switches
+         "-l --almost-all --human-readable --group-directories-first --no-group")
+   :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+   (("C-c f" . dirvish-fd)
+    ("C-c d d" . dirvish-dwm)
+    ("C-c d t" . dirvish-side)
+    :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+    ("a"   . dirvish-quick-access)
+    ("f"   . dirvish-file-info-menu)
+    ("y"   . dirvish-yank-menu)
+    ("N"   . dirvish-narrow)
+    ("^"   . dirvish-history-last)
+    ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+    ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+    ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+    ("TAB" . dirvish-subtree-toggle)
+    ("M-f" . dirvish-history-go-forward)
+    ("M-b" . dirvish-history-go-backward)
+    ("M-l" . dirvish-ls-switches-menu)
+    ("M-m" . dirvish-mark-menu)
+    ("M-t" . dirvish-layout-toggle)
+    ("M-s" . dirvish-setup-menu)
+    ("M-e" . dirvish-emerge-menu)
+    ("M-j" . dirvish-fd-jump)))
+#+END_SRC
 * appearance
 #+BEGIN_SRC emacs-lisp
-   (menu-bar-mode -1) 
+       (menu-bar-mode -1) 
 
-   (use-package solarized-theme
-     :config
-     (setq solarized-high-contrast-mode-line nil))
+      (setq doom-rouge-brighter-comments t)
+      (setq doom-rouge-comment-bg t)
+      (load-theme 'doom-rouge :no-confirm)
 
-  (load-theme 'doom-zenburn :no-confirm)
+      (custom-set-faces
+      '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
+      '(org-level-2 ((t (:inherit outline-2 :height 1.3))))
+      '(org-level-3 ((t (:inherit outline-3 :height 1.2))))
+      '(org-level-4 ((t (:inherit outline-4 :height 1.1))))
+      '(org-level-5 ((t (:inherit outline-5 :height 1.05)))))
 
-     (use-package all-the-icons
-       :ensure t)
+         (use-package all-the-icons
+           :ensure t)
 
-      (use-package doom-modeline
-        :ensure t
-        :init
-        :hook (after-init . doom-modeline-mode)
-        :config
-        ;;(setq doom-modeline-hud t)
-        (setq doom-modeline-minor-modes t)
-        (setq doom-modeline-buffer-encoding nil))
+          (use-package doom-modeline
+            :ensure t
+            :init
+            :hook (after-init . doom-modeline-mode)
+            :config
+            ;;(setq doom-modeline-hud t)
+            (setq doom-modeline-minor-modes t)
+            (setq doom-modeline-buffer-encoding nil))
 
-     (use-package rainbow-delimiters
-      :ensure t
-      :defer t
-      :hook (prog-mode . rainbow-delimiters-mode))
+         (use-package rainbow-delimiters
+          :ensure t
+          :defer t
+          :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 * projects
@@ -245,22 +292,60 @@
       :ensure t
       :config
       (marginalia-mode))
+
+  
+(use-package embark
+  :ensure t
+  :bind
+  (("C-," . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
 #+END_SRC
 
 * searching
 #+BEGIN_SRC emacs-lisp
-(use-package consult
-  :bind (("C-M-l" . consult-imenu)
-     :map isearch-mode-map
-     ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-     ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-     ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-     ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
-     :map minibuffer-local-map
-     ("C-r" . consult-history))
-  :custom
-  (consult-project-root-function #'dw/get-project-root)
-  (completion-in-region-function #'consult-completion-in-region))
+    (use-package consult
+      :bind (("C-M-l" . consult-imenu)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
+         :map minibuffer-local-map
+         ("C-r" . consult-history))
+      :custom
+      (consult-project-root-function #'dw/get-project-root)
+      (completion-in-region-function #'consult-completion-in-region))
+
+    (define-key isearch-mode-map (kbd "M-RET")
+      #'isearch-exit-other-end)
+
+    (defun isearch-exit-other-end ()
+      "Exit isearch, at the opposite end of the string.
+  from https://endlessparentheses.com/leave-the-cursor-at-start-of-match-after-isearch.html"
+      (interactive)
+      (isearch-exit)
+      (goto-char isearch-other-end))
 
 #+END_SRC
 
@@ -268,6 +353,9 @@
 #+BEGIN_SRC emacs-lisp
   (use-package denote
     :config
+    (global-unset-key (kbd "C-x C-n"))
+    (global-set-key (kbd "C-x C-n C-s") #'consult-notes)
+    (global-set-key (kbd "C-x C-n C-m") #'denote)
     (setq denote-known-keywords '("code" "history" "current-events"))
     (setq denote-directory (expand-file-name "/home/isaac/denote/"))
     (setq denote-file-type nil))
@@ -275,17 +363,19 @@
   ;;(add-hook 'dired-mode-hook #'denote-dired-mode)
 
   (use-package consult-notes
+    :ensure t
     ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
     :commands (consult-notes consult-notes-search-in-all-notes)
     :config
     (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
     ;;(global-unset-key (kbd "C-x C-n") nil)
-    ;;(global-set-key (kbd "C-x n s") #'consult-notes)
-    ;;(global-set-key (kbd "C-x n d") #'denote)
+
 
     ;; Set org-roam integration OR denote integration, e.g.:
     (when (locate-library "denote")
       (consult-notes-denote-mode)))
+
+
 
 #+END_SRC
 
@@ -551,6 +641,8 @@
         :defer t
         :hook (org-mode . dw/org-mode-setup)
         :config
+
+        (unbind-key "C-," org-mode-map)
         (setq org-agenda-start-with-log-mode t)
         (setq org-log-done `time)
         (setq org-log-into-drawer t))
@@ -597,79 +689,4 @@
     :config
     (define-key eww-mode-map (kbd "C-j") #'forward-paragraph)
     (define-key eww-mode-map (kbd "C-k") #'backward-paragraph))
-#+END_SRC
-
-* Window Manager
-** EXWM
-#+BEGIN_SRC emacs-lisp
-  ;; (defun efs/exwm-update-class ()
-  ;;   (exwm-workspace-rename-buffer exwm-class-name))
-
-  ;; (use-package exwm
-  ;;   :config
-  ;;   ;; Set the default number of workspaces
-  ;;   (setq exwm-workspace-number 5)
-
-  ;;   ;; When window "class" updates, use it to set the buffer name
-  ;;   (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
-
-  ;;   ;; Rebind CapsLock to Ctrl
-  ;;   (start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
-
-  ;;   ;; Set the screen resolution (update this to be the correct resolution for your screen!)
-  ;;   (require 'exwm-randr)
-  ;;   (exwm-randr-enable)
-  ;;   ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
-
-  ;;   ;; Load the system tray before exwm-init
-  ;;   (require 'exwm-systemtray)
-  ;;   (exwm-systemtray-enable)
-
-  ;;   ;; These keys should always pass through to Emacs
-  ;;   (setq exwm-input-prefix-keys
-  ;;     '(?\C-x
-  ;;       ?\C-u
-  ;;       ?\C-h
-  ;;       ?\M-x
-  ;;       ?\M-`
-  ;;       ?\M-&
-  ;;       ?\M-:
-  ;;       ?\C-\M-j  ;; Buffer list
-  ;;       ?\C-\ ))  ;; Ctrl+Space
-
-  ;;   ;; Ctrl+Q will enable the next key to be sent directly
-  ;;   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
-
-  ;;   ;; Set up global key bindings.  These always work, no matter the input state!
-  ;;   ;; Keep in mind that changing this list after EXWM initializes has no effect.
-  ;;   (setq exwm-input-global-keys
-  ;;         `(
-  ;;           ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-  ;;           ([?\s-r] . exwm-reset)
-
-  ;;           ;; Move between windows
-  ;;           ([s-left] . windmove-left)
-  ;;           ([s-right] . windmove-right)
-  ;;           ([s-up] . windmove-up)
-  ;;           ([s-down] . windmove-down)
-
-  ;;           ;; Launch applications via shell command
-  ;;           ([?\s-&] . (lambda (command)
-  ;;                        (interactive (list (read-shell-command "$ ")))
-  ;;                        (start-process-shell-command command nil command)))
-
-  ;;           ;; Switch workspace
-  ;;           ([?\s-w] . exwm-workspace-switch)
-  ;;           ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-
-  ;;           ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-  ;;           ,@(mapcar (lambda (i)
-  ;;                       `(,(kbd (format "s-%d" i)) .
-  ;;                         (lambda ()
-  ;;                           (interactive)
-  ;;                           (exwm-workspace-switch-create ,i))))
-  ;;                     (number-sequence 0 9))))
-
-  ;;   (exwm-enable))
-
 #+END_SRC
