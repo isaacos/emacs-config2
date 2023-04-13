@@ -4,6 +4,7 @@
   :bind (("M-y" . browse-kill-ring)))
 
 (use-package easy-kill
+  :after (god-mode)
   :ensure t
   :config
   (global-set-key [remap kill-ring-save] 'easy-kill)
@@ -29,17 +30,16 @@
               ("C-d" . kill-region)
               ("C-w" . copy-region-as-kill)
               ("C-m" . apply-macro-to-region-lines)
-              ;; ("C-)" . er/mark-inside-pairs)
-              ;; ("C-'" . er/mark-inside-quotes)
               :map selected-org-mode-map
               ("t" . org-table-convert-region)))
 
 (use-package expand-region
   :ensure t
-  :bind ("C-=" .  er/expand-region)
-  :init
-  (define-key selected-keymap (kbd "C-)") 'er/mark-inside-pairs)
-  (define-key selected-keymap (kbd "C-'") #'er/mark-inside-quotes))
+  :after (selected)
+  :bind (("C-=" .  er/expand-region)
+         :map selected-keymap
+         ("C-)" . er/mark-inside-pairs)
+         ("C-'" . er/mark-inside-quotes)))
 
 (defvar isearch-repeat-map
   (let ((map (make-sparse-keymap)))
@@ -52,6 +52,7 @@
 
 
 (use-package god-mode
+  :defer t
   :ensure t
   :config
   (setq god-exempt-major-modes nil)
@@ -63,10 +64,7 @@
   (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
   (global-set-key (kbd "C-x C-(") #'kmacro-start-macro)
   (global-set-key (kbd "C-x C-)") #'kmacro-end-macro)
-
-
-
-  
+ 
   (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
   (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
   (global-set-key (kbd "<escape>") #'god-mode-all)
@@ -88,31 +86,34 @@
   (define-key god-local-mode-map (kbd "C-S-B") #'backward-char)
   (define-key god-local-mode-map (kbd "C-S-N") #'next-line)
   (define-key god-local-mode-map (kbd "C-S-P") #'previous-line)
-  (define-key god-local-mode-map (kbd "H-'") #'match-paren))
+  (define-key god-local-mode-map (kbd "A-'") #'match-paren)
 
 (defun my-god-mode-update-cursor-type ()
   (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
 
-(add-hook 'post-command-hook #'my-god-mode-update-cursor-type)
-  
+(add-hook 'post-command-hook #'my-god-mode-update-cursor-type))
+
+(add-hook 'after-init-hook 'god-mode-all)
+
 (setq god-mod-alist
     '((nil . "C-")
     ("g" . "M-")
     ("G" . "C-M-")
-    (";" . "H-")))
+    (";" . "A-")
+    ("h" . "H-")))
 
-(defun reset-god-mod-alist ()
-  "set god-mode alist back to a default"
-  (interactive)
-  (setq god-mod-alist
-    '((nil . "C-")
-    ("g" . "M-")
-    ("G" . "C-M-")
-    (";" . "H-"))))
+;; (defun reset-god-mod-alist ()
+;;   "set god-mode alist back to a default"
+;;   (interactive)
+;;   (setq god-mod-alist
+;;     '((nil . "C-")
+;;     ("g" . "M-")
+;;     ("G" . "C-M-")
+;;     (";" . "A-"))))
 
-(global-set-key (kbd "C-x H-;") (kbd "C-x C-;"))
+(global-set-key (kbd "C-x A-;") (kbd "C-x C-;"))
 
-  (define-key isearch-mode-map (kbd "'") 'isearch-exit)
+(define-key isearch-mode-map (kbd "'") 'isearch-exit)
 
 (define-key isearch-mode-map (kbd ";") 'avy-isearch)
 
@@ -126,18 +127,18 @@
     (progn (search-forward (char-to-string char)
                            nil nil arg) (point)))
 
-(define-minor-mode vimish-movement-mode
-              "Minor mode to recreate Vim style movements in god mode"
-              :lighter " Vimish"
-              :keymap (let ((map (make-sparse-keymap)))
-                        (define-key map (kbd "C-j") 'next-line)
-                        (define-key map (kbd "C-k") 'previous-line)
-                        (define-key map (kbd "C-h") 'backward-char)
-                        (define-key map (kbd "C-l") 'forward-char)
-                        (define-key map (kbd "C-w") 'forward-word)
-                        (define-key map (kbd "C-f") 'dwim/goto-char)
-                        (define-key map (kbd "C-b") 'backward-word)
-                        map))
+;; (define-minor-mode vimish-movement-mode
+;;               "Minor mode to recreate Vim style movements in god mode"
+;;               :lighter " Vimish"
+;;               :keymap (let ((map (make-sparse-keymap)))
+;;                         (define-key map (kbd "C-j") 'next-line)
+;;                         (define-key map (kbd "C-k") 'previous-line)
+;;                         (define-key map (kbd "C-h") 'backward-char)
+;;                         (define-key map (kbd "C-l") 'forward-char)
+;;                         (define-key map (kbd "C-w") 'forward-word)
+;;                         (define-key map (kbd "C-f") 'dwim/goto-char)
+;;                         (define-key map (kbd "C-b") 'backward-word)
+;;                         map))
 
 (defvar xah-brackets '("“”" "()" "[]" "{}" "<>" "＜＞" "（）" "［］" "｛｝" "❛❜" "❝❞" "❨❩" "❪❫" "❴❵" "❬❭" "❮❯" "❰❱"))
 
@@ -148,13 +149,13 @@
   (mapcar (lambda (x) (substring x 0 1)) xah-brackets)
   "List of left bracket chars. Each element is a string.")
 
-(defun forward-left-bracket ()
-  "Move cursor to the next occurrence of left bracket.
-The list of brackets to jump to is defined by `xah-right-brackets'.
-URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
-Version 2015-10-01"
-  (interactive)
-  (re-search-forward (regexp-opt xah-left-brackets) nil t))
+;; (defun forward-left-bracket ()
+;;   "Move cursor to the next occurrence of left bracket.
+;; The list of brackets to jump to is defined by `xah-right-brackets'.
+;; URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+;; Version 2015-10-01"
+;;   (interactive)
+;;   (re-search-forward (regexp-opt xah-left-brackets) nil t))
 
 (defconst xah-right-brackets
   (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
@@ -199,7 +200,7 @@ Version 2015-10-01"
 ;;                         map))
 
 
-(define-key prog-mode-map (kbd "H-l") 'hydra-bracket-mov/body)
+(define-key prog-mode-map (kbd "A-l") 'hydra-bracket-mov/body)
 
 (defun xah-forward-right-bracket ()
   "Move cursor to the next occurrence of right bracket.
@@ -226,8 +227,6 @@ Version 2015-10-01"
   (avy-with avy-goto-word-0
     (avy-goto-word-0 nil (line-beginning-position) (point))))
 
-;;(avy-jump (regexp-opt xah-left-brackets))
-
 (defhydra hydra-bracket-mov (:color red :hint nil)
     "
 ^By List^             ^By Level^           ^Actions^  
@@ -237,6 +236,7 @@ _k_: prev          _l_: lower         _m_: mark-sexp
 _e_: end-of        _a_: avy-word                ^ ^
 "
   ("q" nil)
+  (";" nil)
   ("j" my/smart-forward-list)
   ("k" backward-list)
   ("h" backward-up-list)
@@ -265,19 +265,10 @@ _e_: end-of        _a_: avy-word                ^ ^
    ('forward-left-bracket
     (avy-goto-open-brackets))))
 
-(global-set-key (kbd "H-j") #'avy-extend-command)
+(global-set-key (kbd "A-j") #'avy-extend-command)
 ;(gglobal-set-key (kbd "H-;") #'vimish-movement-mode)
 ;;(global-set-key (kbd "H-l") #'bracket-movement-mode)
 ;; (global-set-key (kbd "H-n") #'forward-left-bracket)
 ;; (global-set-key (kbd "H-p") #'xah-backward-left-bracket)
-(global-set-key (kbd "H-s") #'avy-goto-char-timer)
-(global-set-key (kbd "H-i") #'imenu)
-
-
-;; (global-set-key (kbd "H-h") #'(lambda () (interactive) (setq god-mod-alist '(
-;;     (nil . "H-")
-;;     ("g" . "M-")
-;;     ("G" . "C-M-")
-;;     ("h" . "C-")))))
-
-;; (global-set-key (kbd "H-c") #'reset-god-mod-alist)
+;;(global-set-key (kbd "A-s") #'avy-goto-char-timer)
+(global-set-key (kbd "A-i") #'imenu)
