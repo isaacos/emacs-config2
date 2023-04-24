@@ -1,149 +1,160 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
-                    (use-package which-key
-                      :after (god-mode)
-                      :init (which-key-mode)
-                      (which-key-enable-god-mode-support)
-                      :diminish which-key-mode
-                      :config
-                      (setq which-key-idle-delay 0.3))
+                  (use-package which-key
+                    :after (god-mode)
+                    :init (which-key-mode)
+                    (which-key-enable-god-mode-support)
+                    :diminish which-key-mode
+                    :config
+                    (setq which-key-idle-delay 0.3))
 
-                    (global-set-key (kbd "C-x m") #'eshell)
+                  (global-set-key (kbd "C-x m") #'eshell)
 
-                    (defun match-paren (arg)
-                      "Go to the matching paren if on a paren; otherwise insert %."
-                      (interactive "p")
-                      (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-                            ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-                            (t (self-insert-command (or arg 1)))))
+                  (defun match-paren (arg)
+                    "Go to the matching paren if on a paren; otherwise insert %."
+                    (interactive "p")
+                    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+                          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+                          (t (self-insert-command (or arg 1)))))
 
-                    (use-package avy
-                      :after (key-chord)
-                      :init
-                      (setq avy-all-windows 'all-frames)
-                      (setq avy-style 'at)
-                      (setq avy-highlight-first t)
-                      (setq avy-styles-alist '((avy-goto-char . at)
-                         (avy-goto-line . at-full)
-                         (avy-goto-end-of-line . post)))
-                      (setq avy-keys '(?a ?s ?d ?g ?h ?j ?k ?l ?\;))
+                  (use-package avy
+                    :after (key-chord)
+                    :init
+                    (setq avy-all-windows 'all-frames)
+                    (setq avy-style 'at)
+                    (setq avy-highlight-first t)
+                    (setq avy-styles-alist '((avy-goto-char . at)
+                       (avy-goto-line . at-full)
+                       (avy-goto-end-of-line . post)))
+                    (setq avy-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
 
-                      )
+                  (use-package anzu
+                    :defer t
+                    :ensure t
+                    :bind (("A-r" . anzu-query-replace-at-cursor))
+                    :config
+                    (global-anzu-mode +1)
+                    (custom-set-variables
+                      '(anzu-mode-lighter "")
+                      '(anzu-replace-to-string-separator " => "))
 
-                    (use-package anzu
-                      :defer t
-                      :ensure t
-                      :config
-                      (global-anzu-mode +1)
-                      (custom-set-variables
-                        '(anzu-mode-lighter "")
-                        '(anzu-replace-to-string-separator " => "))
+                    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+                    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+                    )
 
-                      (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-                      (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
-                      (global-set-key (kbd "A-r") 'anzu-query-replace-at-cursor))
-
-        (use-package ace-window
-          :ensure t
-          :bind (
-                 ("C-x o" . ace-window))
-          :config
-          ;;customize to make face more visible
-          (custom-set-faces
-           '(aw-leading-char-face
-             ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
-
-          ;; (defface aw-leading-char-face
-          ;; '((((class color)) (:foreground "white"))
-          ;;   (((background dark)) (:foreground "#e52b50"))
-          ;;   (((background light)) (:foreground "gray0"))
-          ;;   (t (:foreground "gray100" :underline nil)))
-          ;; "Face for each window's leading char.")
-          (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
-
-        (use-package puni
-          :bind (("C->" . puni-slurp-forward)
-                 ("C-<" . puni-barf-forward)
-                 ("A-k" . puni-kill-line)))
-
-      (use-package hydra
-        :after (god-mode)
-        :ensure t)
-
-      (defun kmacro-toggle-start-end ()
-        "Starts kmacro unless one is already in progress than it ends it"
-        (interactive)
-        (if defining-kbd-macro
-            (kmacro-end-macro 1)
-          (kmacro-start-macro 0)))
+      (use-package ace-window
+        :ensure t
+        :bind (
+               ("C-x o" . ace-window))
+        :config
+        ;;customize to make face more visible
 
 
-        (org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
+  (custom-set-faces
+         '(aw-leading-char-face
+           ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
 
-              (defun run-arg-in-god-mode (arg key-arg)
-                (interactive "p")
+        (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
+        (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face))
 
-                (if god-local-mode
-                  (funcall (key-binding (eval key-arg)))
-                  (self-insert-command (or arg 1))))
 
-                  ;; (define-minor-mode fast-nav-mode
-                  ;;     "Minor mode to rapidly move over large sections of code"
-                  ;;     :lighter "Fast-nav"
-                  ;;     :keymap (let ((map (make-keymap)))
-                  ;;               (define-key map (kbd "j") 'forward-sexp)
-                  ;;               (define-key map (kbd "t") 'hs-toggle-hiding)
-                  ;;               (define-key map (kbd "T") 'hs-hide-all)
-                  ;;               (define-key map (kbd "k") 'backward-sexp)
-                  ;;               (define-key map (kbd "d") 'down-list)
-                  ;;               (define-key map (kbd "u") 'up-list)
-                  ;;               (define-key map (kbd "m") 'consult-mark)
-                  ;;               (define-key map (kbd "f") 'forward-paragraph)
-                  ;;               (define-key map (kbd "b") 'backward-paragraph)
-                  ;;               (define-key map (kbd "n") 'fast-nav-mode)
-                  ;;               map))
+        ;; (defface aw-leading-char-face
+        ;; '((((class color)) (:foreground "white"))
+        ;;   (((background dark)) (:foreground "#e52b50"))
+        ;;   (((background light)) (:foreground "gray0"))
+        ;;   (t (:foreground "gray100" :underline nil)))
+        ;; "Face for each window's leading char.")
+        (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
 
-                    (use-package key-chord
-                      :ensure t
-                      :after (god-mode)
-                      :init (key-chord-mode 1)
-                      :config
-                      (key-chord-define-global "ii" 'god-mode-all)
-                      (key-chord-define-global "xs" 'save-buffer)
-                      (key-chord-define-global "jl" 'avy-goto-line)
-                      (key-chord-define-global "jw" 'ace-window)
-                      (key-chord-define-global "je" 'avy-goto-end-of-line)
-                      (key-chord-define-global "jk" 'avy-goto-char)
-                      (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
-                      (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
+      (use-package puni
+        :bind (("C->" . puni-slurp-forward)
+               ("C-<" . puni-barf-forward)
+               ("A-k" . puni-kill-line)))
+
+    (use-package hydra
+      :after (god-mode)
+      :ensure t)
+
+    (defun kmacro-toggle-start-end ()
+      "Starts kmacro unless one is already in progress than it ends it"
+      (interactive)
+      (if defining-kbd-macro
+          (kmacro-end-macro 1)
+        (kmacro-start-macro 0)))
+
+
+      (org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
+
+            (defun run-arg-in-god-mode (arg key-arg)
+              (interactive "p")
+
+              (if god-local-mode
+                (funcall (key-binding (eval key-arg)))
+                (self-insert-command (or arg 1))))
+
+                ;; (define-minor-mode fast-nav-mode
+                ;;     "Minor mode to rapidly move over large sections of code"
+                ;;     :lighter "Fast-nav"
+                ;;     :keymap (let ((map (make-keymap)))
+                ;;               (define-key map (kbd "j") 'forward-sexp)
+                ;;               (define-key map (kbd "t") 'hs-toggle-hiding)
+                ;;               (define-key map (kbd "T") 'hs-hide-all)
+                ;;               (define-key map (kbd "k") 'backward-sexp)
+                ;;               (define-key map (kbd "d") 'down-list)
+                ;;               (define-key map (kbd "u") 'up-list)
+                ;;               (define-key map (kbd "m") 'consult-mark)
+                ;;               (define-key map (kbd "f") 'forward-paragraph)
+                ;;               (define-key map (kbd "b") 'backward-paragraph)
+                ;;               (define-key map (kbd "n") 'fast-nav-mode)
+                ;;               map))
+
+                  (use-package key-chord
+                    :ensure t
+                    :after (god-mode)
+                    :init (key-chord-mode 1)
+                    :config
+                    (key-chord-define-global "ii" 'god-mode-all)
+                    (key-chord-define-global "xs" 'save-buffer)
+                    (key-chord-define-global "jl" 'avy-goto-line)
+                    (key-chord-define-global "jw" 'ace-window)
+                    (key-chord-define-global "je" 'avy-goto-end-of-line)
+                    (key-chord-define-global "jk" 'avy-goto-char)
+                    (key-chord-define god-local-mode-map "mm" 'execute-extended-command-for-buffer)
+                    (key-chord-define god-local-mode-map "xx" 'execute-extended-command))
 #+END_SRC
 
 * Defaults
 #+BEGIN_SRC emacs-lisp
-      (use-package hideshow
-        :after (emacs-lisp-mode org-mode))
+  (setq make-backup-files nil)
+        (use-package hideshow
+          :after (emacs-lisp-mode org-mode))
 
-      (use-package zop-to-char
-        :bind (("C-z" . zop-up-to-char)))
+        (use-package zop-to-char
+          :config
+          (setq zop-to-char-quit-at-point-keys '(?\C-q ?x))
+          :bind (("C-z" . zop-up-to-char)
+                 ("A-d" . zop-to-char)))
 
-    (use-package winner
-      ;;:defer t
-      :config
-      (winner-mode 1)
-      :bind (("C-c w /" . winner-undo)
-             ("C-c w _" . winner-redo)))
+      (use-package winner
+        ;;:defer t
+        :config
+        (winner-mode 1)
+        :bind (("C-c w /" . winner-undo)
+               ("C-c w _" . winner-redo)))
 
-      (use-package super-save
-        :defer t
-      :ensure t
-      :config
-      (super-save-mode +1))
+        (use-package super-save
+          :defer t
+        :ensure t
+        :config
+        (super-save-mode +1))
 
-    (use-package vterm
-      :defer t)
+      (use-package vterm
+        :defer t)
 
-    (use-package rg
-      :defer t)
+  (setq next-screen-context-lines 5)
+
+      (use-package rg
+        :defer t)
 #+END_SRC
 
 * Dired
@@ -191,9 +202,9 @@
 * appearance
 #+BEGIN_SRC emacs-lisp
 
-  (setq doom-rouge-brighter-comments t)
-  (setq doom-rouge-comment-bg t)
-  (load-theme 'doom-rouge :no-confirm)
+  (setq doom-zenburn-brighter-comments t)
+  (setq doom-zenburn-comment-bg t)
+  (load-theme 'doom-zenburn :no-confirm)
 
   (custom-set-faces
   '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
@@ -259,9 +270,11 @@
 
     (defvar vertico-repeat-map
       (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "x") #'(lambda () "insert-x" (interactive) (insert "x")))
         (define-key map (kbd "j") #'vertico-next)
         (define-key map (kbd "k") #'vertico-previous)
         map))
+
 
     (dolist (cmd '(vertico-next vertico-previous))
       (put cmd 'repeat-map 'vertico-repeat-map))
@@ -269,6 +282,7 @@
       (use-package vertico
         :ensure t
         :bind (:map vertico-map
+               ("x" . vertico-next)
                ("C-j" . vertico-next)
                ("C-k" . vertico-previous)
                ("C-f" . vertico-exit)
@@ -407,13 +421,13 @@
 
 * Lua/Fennel
 #+BEGIN_SRC emacs-lisp
-        (use-package lua-mode
-          :mode (("\\.lua\\'" . lua-mode)))
-    
-        (use-package fennel-mode
-          :mode (("\\.fnl\\'" . fennel-mode))
-          :config
-          (setq fennel-program "~/.luarocks/bin/fennel --repl"))
+  (use-package lua-mode
+    :mode (("\\.lua\\'" . lua-mode)))
+
+  (use-package fennel-mode
+    :mode (("\\.fnl\\'" . fennel-mode))
+    :config
+    (setq fennel-program "~/.luarocks/bin/fennel --repl"))
 #+END_SRC
 
 * Clojure
@@ -474,10 +488,10 @@
     ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
     ;; (add-hook 'js-mode-hook 'js2-minor-mode)
 
-    (use-package js-mode
-      :init
-      (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
-      (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+    ;; (use-package js-mode
+    ;;   :init
+    ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+    ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
 
     (use-package rjsx-mode
       :defer t
