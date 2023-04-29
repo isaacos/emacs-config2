@@ -1,37 +1,58 @@
 
+;; (global-set-key (kbd ",") nil)
+;; (global-set-key (kbd ", SPC") #'(lambda () (interactive) (insert ", ")))
+;; (global-set-key (kbd ", j") #'hydra-vi/body)
+
+;; (global-set-key (kbd ";") nil)
+;; (global-set-key (kbd "; <return>") #'(lambda () (interactive) (insert ";\n")))
+;; (define-key god-local-mode-map (kbd ",") nil)
+
+;; (defhydra hydra-insert ()
+;;   "insert"
+;;   (";" (lambda () (interactive) (insert ";")))
+;;   ("," (lambda () (interactive) (insert ",")))
+;;   ("q" nil "quit"))
+;; (global-set-key (kbd "; i") hydra-insert/body)
+
 (use-package browse-kill-ring
+  :after (god-mode)
   :ensure t
   :bind (("M-y" . browse-kill-ring)))
 
-(use-package easy-kill
-  :after (god-mode)
-  :ensure t
-  :bind (("M-w" . easy-kill)
-         (:map easy-kill-base-map
-               ("d" . easy-kill-region)
-               ("j" . easy-kill-expand)
-               ("k" . easy-kill-shrink)
-               ("SPC" . easy-kill-cycle)
-               ("m" . easy-kill-mark-region)))
-  :config
-  (setq easy-kill-alist '((?w word           " ")
-                             (?s sexp           "\n")
-                             (?l list           "\n")
-                             ;;(?f filename       "\n")
-                             (?f defun          "\n\n")
-                             (?F defun-name     " ")
-                             (?e line           "\n")
-                             (?b buffer-file-name)))
-  (set-face-foreground 'secondary-selection (face-foreground 'avy-lead-face))
-  (set-face-background 'secondary-selection (face-background 'avy-lead-face)))
+;; (use-package easy-kill
+;;   :after (god-mode)
+;;   :ensure t
+;;   :bind (("M-w" . easy-kill)
+;;          (:map god-local-mode-map
+;;                ("m" . easy-kill))
+;;          (:map easy-kill-base-map
+;;                ("d" . easy-kill-region)
+;;                ("j" . easy-kill-expand)
+;;                ("k" . easy-kill-shrink)
+;;                ("SPC" . easy-kill-cycle)
+;;                ("m" . easy-kill-mark-region)))
+;;   :config
+;;   (setq easy-kill-alist '((?w word           " ")
+;;                              (?s sexp           "\n")
+;;                              (?l list           "\n")
+;;                              ;;(?f filename       "\n")
+;;                              (?f defun          "\n\n")
+;;                              (?F defun-name     " ")
+;;                              (?e line           "\n")
+;;                              (?b buffer-file-name)))
+;;   (set-face-foreground 'secondary-selection (face-foreground 'avy-lead-face))
+;;   (set-face-background 'secondary-selection (face-background 'avy-lead-face)))
 
 (use-package crux
+  :after (god-mode)
   :ensure t
   :bind (("C-a" . crux-move-beginning-of-line)
          ("C-o" . crux-smart-open-line)
-         ("C-S-o" . crux-smart-open-line-above)))
+         ("C-S-o" . crux-smart-open-line-above)
+         ("M-o" . crux-other-window-or-switch-buffer)))
 
 (use-package selected
+  :after (god-mode)
   :ensure t
   :commands selected-minor-mode
   :init
@@ -41,13 +62,14 @@
               ("C-q" . selected-off)
               ("C-u" . upcase-region)
               ("M-l" . downcase-region)
-              ("C-d" . kill-region)
-              ("C-w" . copy-region-as-kill)
+              ("d" . kill-region)
+              ;;("C-w" . copy-region-as-kill)
               ("C-m" . apply-macro-to-region-lines)
               :map selected-org-mode-map
               ("t" . org-table-convert-region)))
 
 (use-package expand-region
+  :after (god-mode)
   :ensure t
   :after (selected)
   :bind (("C-=" .  er/expand-region)
@@ -85,25 +107,40 @@
   (require 'god-mode-isearch)
   (define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
   (define-key isearch-mode-map (kbd "x") #'god-mode-isearch-activate)
-  ;;(define-key isearch-mode-map (kbd "C-i") #'god-mode-isearch-activate)
   
   (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
   (define-key god-mode-isearch-map (kbd "x") #'(lambda () "insert-x in isearch" (interactive) (progn (isearch-printing-char (string-to-char "x")) (god-mode-isearch-disable))))  
   (define-key god-mode-isearch-map (kbd "5") #'anzu-isearch-query-replace)
   (define-key god-mode-isearch-map (kbd "o") #'isearch-occur)
-  
+    
   (define-key god-local-mode-map (kbd "i") #'god-mode-all)
   (define-key god-local-mode-map (kbd ".") #'repeat)
 
-  (define-key god-local-mode-map (kbd "M-k") #'kill-line)
+  ;;(define-key god-local-mode-map (kbd "M-k") #'kill-line)
   (define-key god-local-mode-map (kbd "C-S-E") #'end-of-line)
   (define-key god-local-mode-map (kbd "C-S-A") #'beginning-of-line)
   (define-key god-local-mode-map (kbd "C-S-F") #'forward-char)
   (define-key god-local-mode-map (kbd "C-S-B") #'backward-char)
   (define-key god-local-mode-map (kbd "C-S-N") #'next-line)
   (define-key god-local-mode-map (kbd "C-S-P") #'previous-line)
-  (define-key god-local-mode-map (kbd "A-'") #'match-paren)
 
+  (define-key god-local-mode-map (kbd ";") nil)
+  (define-key god-local-mode-map (kbd "; '") #'match-paren)
+  (define-key god-local-mode-map (kbd "; i") #'imenu)
+  (define-key god-local-mode-map (kbd "; x f") #'rgrep)
+
+
+  (define-key god-local-mode-map (kbd "h") nil)
+  ;;(define-key god-local-mode-map (kbd "l") #'forward-char)
+  
+  ;;(define-key god-local-mode-map (kbd "w") #'forward-word)
+
+  (define-key god-local-mode-map (kbd "d") nil)
+  (define-key god-local-mode-map (kbd "d d") #'crux-smart-kill-line)
+  (define-key god-local-mode-map (kbd "d s") #'zap-to-char)
+  (define-key god-local-mode-map (kbd "d t") #'zap-up-to-char)
+  (define-key god-local-mode-map (kbd "d l") #'delete-char)
+  
 (defun my-god-mode-update-cursor-type ()
   (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
 
@@ -113,10 +150,9 @@
 
 (setq god-mod-alist
     '((nil . "C-")
-    ("g" . "M-")
-    ("G" . "C-M-")
-    (";" . "A-")
-    ("h" . "H-")))
+    ("m" . "M-")
+    ("g" . "C-M-")
+    ))
 
 ;; (defun reset-god-mod-alist ()
 ;;   "set god-mode alist back to a default"
@@ -127,11 +163,11 @@
 ;;     ("G" . "C-M-")
 ;;     (";" . "A-"))))
 
-(global-set-key (kbd "C-x A-;") (kbd "C-x C-;"))
+;;(global-set-key (kbd "C-x A-;") (kbd "C-x C-;"))
 
 (define-key isearch-mode-map (kbd "'") 'isearch-exit)
 
-(define-key isearch-mode-map (kbd ";") 'avy-isearch)
+(define-key god-mode-isearch-map (kbd ";") 'avy-isearch)
 
  (defun dwim/goto-char (arg char)
     "Move pointer up to and including ARG'th occurrence of CHAR.
@@ -215,8 +251,42 @@ Version 2015-10-01"
 ;;                         (define-key map (kbd "C-e") 'forward-list)
 ;;                         map))
 
+(defhydra hydra-vi ()
+  "vi"
+  ("l" forward-char)
+  ("h" backward-char)
+  ("j" next-line)
+  ("k" previous-line)
+  ("m" easy-kill)
+  ("v" rectangle-mark-mode)
+  ("SPC" hydra-paragraph/body :exit t)
+  ("q" nil "quit"))
 
-(global-set-key (kbd "H-l") 'hydra-bracket-mov/body)
+(defhydra hydra-paragraph (:color red :hint nil)
+    ""
+  ("q" nil)
+  ("l" forward-word "forward")
+  ("j" forward-paragraph "next")
+  ("k" backward-paragraph "prev")
+  ("h" backward-word "backard")
+  ("SPC" hydra-vi/body :exit t)
+  ("m" set-mark-command "mark"))
+
+(define-key god-local-mode-map (kbd "h l") 'hydra-bracket-mov/body)
+(define-key god-local-mode-map (kbd "h j") 'hydra-vi/body)
+
+
+(defhydra hydra-search (:color red :hint nil)
+    ""
+  ("q" nil)
+  ("s" isearch-repeat-forward "forward")
+  ("r" isearch-repeat-backward "backward")
+  ("j" avy-next "avy-next")
+  ("k" avy-prev "avy-prev")
+  ("." isearch-forward-thing-at-point "at point")
+  ("m" set-mark-command "mark"))
+
+(define-key god-local-mode-map (kbd "h s") 'hydra-search/body)
 
 (defun xah-forward-right-bracket ()
   "Move cursor to the next occurrence of right bracket.
@@ -247,7 +317,7 @@ Version 2015-10-01"
     "
 ^By List^             ^By Level^           ^Actions^  
 ^^^^^^^^----------------------------------------------
-_j_: next          _h_: higher        _SPC_: set-mark 
+_j_: next          _h_: higher        _SPC_: vi 
 _k_: prev          _l_: lower         _m_: mark-sexp
 _e_: end-of        _w_: avy-word                ^ ^
 "
@@ -260,17 +330,7 @@ _e_: end-of        _w_: avy-word                ^ ^
   ("e" forward-list)
   ("w" avy-goto-word-1 :exit t)
   ("m" easy-mark-sexp)
-  ("SPC" set-mark-command))
-
-
-(defhydra hydra-paragraph (:color red :hint nil)
-    ""
-  ("q" nil)
-  ("l" forward-to-word "forward")
-  ("j" forward-paragraph "next")
-  ("k" backward-paragraph "prev")
-  ("h" backward-word "backard")
-  ("m" set-mark-command "mark"))
+  ("SPC" hydra-vi/body :exit t))
 
 (defhydra hydra-avy (:color teal :hint nil)
   "
@@ -290,8 +350,8 @@ _e_: word-1        _f_: char-inline                ^ ^
   ("f" avy-goto-char-in-line)
   ("q" nil))
 
-(global-set-key (kbd "H-n") #'hydra-paragraph/body)
-(global-set-key (kbd "H-a") #'hydra-avy/body)
+(define-key god-local-mode-map (kbd "h n") #'hydra-paragraph/body)
+(define-key god-local-mode-map (kbd "h a") #'hydra-avy/body)
 
 ;; (defun avy-extend-command (repeat-arg)
 ;;   "Runs a specific avy command based on what the last-repeatable-command was"
@@ -318,7 +378,7 @@ _e_: word-1        _f_: char-inline                ^ ^
 ;; (global-set-key (kbd "H-n") #'forward-left-bracket)
 ;; (global-set-key (kbd "H-p") #'xah-backward-left-bracket)
 ;;(global-set-key (kbd "A-s") #'avy-goto-char-timer)
-(global-set-key (kbd "A-i") #'imenu)
-(global-set-key (kbd "A-x C-f") #'rgrep))
+
+)
 
 (add-hook 'after-init-hook 'god-mode-all)
