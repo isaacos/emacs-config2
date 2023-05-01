@@ -15,12 +15,18 @@
 (setq-default isearch-yank-on-move t)
 (setq-default set-mark-command-repeat-pop t)
 
+;;elpaca
+(setq package-enable-at-startup nil)
+;;end
+
 (menu-bar-mode -1)
 
 (setq doc-view-continuous t)
 
-(tab-bar-mode -1)
 
+(tab-bar-mode -1)
+;; Loads a nice blue theme, avoids the white screen flash on startup.
+;; (load-theme 'deeper-blue t)
 
 (setq inhibit-startup-message t)
 (setq inhibit-compacting-font-caches t)
