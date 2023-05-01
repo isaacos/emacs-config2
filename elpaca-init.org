@@ -1,0 +1,1105 @@
+* god mode
+#+BEGIN_SRC emacs-lisp
+
+  (use-package browse-kill-ring
+   :elpaca t
+   ;;:after (god-mode)
+   :ensure t
+   :bind (("C-M-y" . browse-kill-ring)))
+
+  (use-package crux
+   ;;:after (god-mode)
+   :elpaca t
+   :ensure t
+   :bind (("C-a" . crux-move-beginning-of-line)
+          ("C-o" . crux-smart-open-line)
+          ("C-S-o" . crux-smart-open-line-above)
+          ("M-o" . crux-other-window-or-switch-buffer)))
+
+  (use-package selected
+   ;;:after (god-mode)
+   :elpaca t
+   :ensure t
+   :commands selected-minor-mode
+   :init
+   (selected-global-mode)
+   (setq selected-org-mode-map (make-sparse-keymap))
+   :bind (:map selected-keymap
+               ("C-q" . selected-off)
+               ("C-u" . upcase-region)
+               ("M-l" . downcase-region)
+               ("d" . kill-region)
+               ;;("C-w" . copy-region-as-kill)
+               ("C-m" . apply-macro-to-region-lines)
+               :map selected-org-mode-map
+               ("t" . org-table-convert-region)))
+
+  (use-package expand-region
+   :elpaca t
+   ;;:after (god-mode)
+   :ensure t
+   :after (selected)
+   :bind (("C-=" .  er/expand-region)
+          :map selected-keymap
+          ;;(
+          ("C-)" . er/mark-inside-pairs)
+          ("C-'" . er/mark-inside-quotes)))
+
+   (use-package god-mode
+    :elpaca (god-mode :host github :repo "emacsorphanage/god-mode")
+    ;;:defer 4
+    ;;:after (avy hydra)
+    ;;:ensure t
+    :config
+    (setq god-exempt-major-modes nil)
+    (setq god-exempt-predicates nil)
+    (global-set-key (kbd "C-x C-1") #'delete-other-windows)
+    (global-set-key (kbd "C-x C-2") #'split-window-below)
+    (global-set-key (kbd "C-x C-3") #'split-window-right)
+    (global-set-key (kbd "C-x C-0") #'delete-window)
+    (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+    (global-set-key (kbd "C-x C-(") #'kmacro-start-macro)
+    (global-set-key (kbd "C-x C-)") #'kmacro-end-macro)
+
+    (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
+    (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
+    (global-set-key (kbd "<escape>") #'god-mode-all)
+
+    (require 'god-mode-isearch)
+    (define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
+    (define-key isearch-mode-map (kbd "x") #'god-mode-isearch-activate)
+
+    (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
+    (define-key god-mode-isearch-map (kbd "x") #'(lambda () "insert-x in isearch" (interactive) (progn (isearch-printing-char (string-to-char "x")) (god-mode-isearch-disable))))  
+    (define-key god-mode-isearch-map (kbd "5") #'anzu-isearch-query-replace)
+    (define-key god-mode-isearch-map (kbd "o") #'isearch-occur)
+
+    (define-key god-local-mode-map (kbd "i") #'god-mode-all)
+    (define-key god-local-mode-map (kbd ".") #'repeat)
+
+    ;;(define-key god-local-mode-map (kbd "M-k") #'kill-line)
+    (define-key god-local-mode-map (kbd "C-S-E") #'end-of-line)
+    (define-key god-local-mode-map (kbd "C-S-A") #'beginning-of-line)
+    (define-key god-local-mode-map (kbd "C-S-F") #'forward-char)
+    (define-key god-local-mode-map (kbd "C-S-B") #'backward-char)
+    (define-key god-local-mode-map (kbd "C-S-N") #'next-line)
+    (define-key god-local-mode-map (kbd "C-S-P") #'previous-line)
+
+    (define-key god-local-mode-map (kbd ";") nil)
+    (define-key god-local-mode-map (kbd "; '") #'match-paren)
+    (define-key god-local-mode-map (kbd "; i") #'imenu)
+    (define-key god-local-mode-map (kbd "; x f") #'rgrep)
+
+    (define-key god-local-mode-map (kbd "h") #'backward-char)
+    (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
+    (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
+    (define-key god-local-mode-map (kbd "l") #'forward-char)
+    (define-key god-local-mode-map (kbd "b") #'backward-to-word)
+    (define-key god-local-mode-map (kbd "f") #'forward-to-word)
+    (define-key god-local-mode-map (kbd "t") #'set-mark-command) ;;taken from Xah Fly Keys
+
+    (define-key god-local-mode-map (kbd "n") #'avy-goto-char)
+    (define-key god-local-mode-map (kbd "p") #'hydra-paragraph/body)
+
+    (global-set-key (kbd "M-a") #'beginning-of-buffer)
+    (global-set-key (kbd "M-e") #'end-of-buffer)
+
+   (bind-keys :map god-local-mode-map
+              :prefix "d"
+              :prefix-map my-vimish-d-map
+              ("d" . crux-smart-kill-line)
+              ("s" . zap-to-char)
+              ("t" . zap-up-to-char)
+              ("l" . delete-char))
+
+  (bind-keys :map god-local-mode-map
+              :prefix "SPC"
+              :prefix-map my-spc-leader-map
+              ("SPC" . execute-extended-command)
+              ("l" . hydra-bracket-mov/body))
+
+  (defun my-god-mode-update-cursor-type ()
+    (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
+
+  (add-hook 'post-command-hook #'my-god-mode-update-cursor-type)
+
+  (setq god-mod-alist
+      '((nil . "C-")
+      ("m" . "M-")
+      ("g" . "C-M-")))
+
+  (define-key isearch-mode-map (kbd "'") 'isearch-exit)
+
+  (define-key god-mode-isearch-map (kbd ";") 'avy-isearch)
+
+   (defun dwim/goto-char (arg char)
+      "Move pointer up to and including ARG'th occurrence of CHAR.
+              Case is ignored if `case-fold-search' is non-nil in the current buffer.
+              Goes backward if ARG is negative; error if CHAR not found."
+      (interactive "p\ncchar: ")
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char)))
+      (progn (search-forward (char-to-string char)
+                             nil nil arg) (point)))
+
+  (defvar xah-brackets '("“”" "()" "[]" "{}" "<>" "＜＞" "（）" "［］" "｛｝" "❛❜" "❝❞" "❨❩" "❪❫" "❴❵" "❬❭" "❮❯" "❰❱"))
+
+    ;; "A list of strings, each element is a string of (defconst xah-right-brackets
+    ;; (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
+
+  (defconst xah-left-brackets
+    (mapcar (lambda (x) (substring x 0 1)) xah-brackets)
+    "List of left bracket chars. Each element is a string.")
+
+  (defconst xah-right-brackets
+    (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
+    "List of right bracket chars. Each element is a string.")
+
+  (defun xah-backward-left-bracket ()
+    "Move cursor to the previous occurrence of left bracket.
+  The list of brackets to jump to is defined by `xah-left-brackets'.
+  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+  Version 2015-10-01"
+    (interactive)
+    (re-search-backward (regexp-opt xah-left-brackets) nil t))
+
+  (defun forward-left-bracket ()
+    "Move cursor to the next occurrence of left bracket.
+  The list of brackets to jump to is defined by `xah-right-brackets'.
+  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+  Version 2015-10-01"
+    (interactive)
+    (re-search-forward (regexp-opt xah-left-brackets) nil t))
+
+  (defun my/smart-forward-list (arg)
+    "Move to the start of the next list"
+    (interactive "p")
+    (if (looking-at "\\s(")
+        (progn
+          (forward-list 2)
+          (backward-list 1))
+      (progn 
+        (re-search-forward (regexp-opt xah-left-brackets) (looking-at (regexp-opt xah-right-brackets)) t)
+        (backward-char 1))))
+
+  (defhydra hydra-paragraph (:color red :hint nil)
+      ""
+    ("q" nil)
+    ("l" forward-word "forward")
+    ("j" forward-paragraph "next")
+    ("k" backward-paragraph "prev")
+    ("h" backward-word "backard")
+    ("SPC" hydra-vi/body :exit t)
+    ("m" set-mark-command "mark"))
+
+  (defhydra hydra-search (:color red :hint nil)
+      ""
+    ("q" nil)
+    ("s" isearch-repeat-forward "forward")
+    ("r" isearch-repeat-backward "backward")
+    ("j" avy-next "avy-next")
+    ("k" avy-prev "avy-prev")
+    ("." isearch-forward-thing-at-point "at point")
+    ("m" set-mark-command "mark"))
+
+  (defun xah-forward-right-bracket ()
+    "Move cursor to the next occurrence of right bracket.
+  The list of brackets to jump to is defined by `xah-right-brackets'.
+  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+  Version 2015-10-01"
+    (interactive)
+    (re-search-forward (regexp-opt xah-right-brackets) nil t))
+
+  (defun avy-goto-open-brackets ()
+    (interactive)
+    (let ((avy-command this-command))   ; for look up in avy-orders-alist
+      (avy-jump (regexp-opt xah-left-brackets))))
+
+  (defun avy-goto-word-0-below-in-line ()
+    "Jump forward to words in the current line"
+    (interactive)
+    (avy-with avy-goto-word-0
+      (avy-goto-word-0 nil (point) (line-end-position))))
+
+  (defun avy-goto-word-0-above-in-line ()
+    "Jump forward to words in the current line"
+    (interactive)
+    (avy-with avy-goto-word-0
+      (avy-goto-word-0 nil (line-beginning-position) (point))))
+
+  (defhydra hydra-bracket-mov (:color red :hint nil)
+      "
+  ^By List^             ^By Level^           ^Actions^  
+  ^^^^^^^^----------------------------------------------
+  _j_: next          _h_: higher        _SPC_: vi 
+  _k_: prev          _l_: lower         _m_: mark-sexp
+  _e_: end-of        _w_: avy-word                ^ ^
+  "
+    ("q" nil)
+    (";" nil)
+    ("j" my/smart-forward-list)
+    ("k" backward-list)
+    ("h" backward-up-list)
+    ("l" down-list)
+    ("e" forward-list)
+    ("w" avy-goto-word-1 :exit t)
+    ("m" easy-mark-sexp)
+    ("SPC" hydra-vi/body :exit t))
+
+  (defhydra hydra-avy (:color teal :hint nil)
+    "
+  ^^             ^^           ^^  
+  ^^^^^^^^----------------------------------------------
+  _j_: char          _SPC_: ws        _s_: timer 
+  _w_: word-0        _l_: line        _r_: region
+  _e_: word-1        _f_: char-inline                ^ ^
+  "
+    ("j" avy-goto-char)
+    ("w" avy-goto-word-0 )
+    ("SPC" avy-goto-whitespace-end)
+    ("e" avy-goto-word-1 )
+    ("l" avy-goto-line)
+    ("s" avy-goto-char-timer)
+    ("r" avy-kill-ring-save-region )
+    ("f" avy-goto-char-in-line)
+    ("q" nil))
+
+  )
+
+  ;;(add-hook 'after-init-hook 'god-mode-all)
+
+#+END_SRC
+* keybinding modes
+#+BEGIN_SRC emacs-lisp
+        ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
+                  (use-package which-key
+                    :elpaca t
+                    :after (god-mode)
+                    :init (which-key-mode)
+                    (which-key-enable-god-mode-support)
+                    :diminish which-key-mode
+                    :config
+                    (setq which-key-idle-delay 0.3))
+
+                  (global-set-key (kbd "C-x m") #'eshell)
+
+                  (defun match-paren (arg)
+                    "Go to the matching paren if on a paren; otherwise insert %."
+                    (interactive "p")
+                    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+                          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+                          (t (self-insert-command (or arg 1)))))
+
+                  (use-package avy
+                    :elpaca t
+                    :after (key-chord)
+                    :init
+                    (setq avy-all-windows 'all-frames)
+                    (setq avy-style 'at)
+                    (setq avy-highlight-first t)
+                    (setq avy-styles-alist '((avy-goto-char . at)
+                       (avy-goto-line . at-full)
+                       (avy-goto-end-of-line . post)))
+                    (setq avy-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
+
+                  (use-package anzu
+                    :elpaca t
+                    ;;:defer 2
+                    :after (god-mode)
+                    :ensure t
+                    :bind (
+                           (:map god-local-mode-map
+                                 ("; r" . anzu-query-replace-at-cursor)))
+                    :config
+                    (global-anzu-mode +1)
+                    (custom-set-variables
+                      '(anzu-mode-lighter "")
+                      '(anzu-replace-to-string-separator " => "))
+
+                    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+                    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+                    )
+
+      (use-package ace-window
+        :elpaca t
+        ;;:defer 1
+        ;;:after (avy)
+        :ensure t
+        :bind (("C-x o" . ace-window))
+        :config
+        ;;customize to make face more visible
+
+
+  (custom-set-faces
+         '(aw-leading-char-face
+           ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
+
+        (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
+        (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face))
+
+        (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
+
+      (use-package puni
+        :elpaca t
+        ;;:defer 5
+        :after (god-mode)
+        :bind (
+               ("C-<" . puni-barf-forward)
+               ("C->" . puni-slurp-forward)
+               :map god-local-mode-map
+               ("; k" . puni-kill-line)))
+
+    (use-package hydra
+      :elpaca t
+      ;;:defer 1
+      :after (god-mode)
+      :ensure t)
+
+    (defun kmacro-toggle-start-end ()
+      "Starts kmacro unless one is already in progress than it ends it"
+      (interactive)
+      (if defining-kbd-macro
+          (kmacro-end-macro 1)
+        (kmacro-start-macro 0)))
+
+            (defun run-arg-in-god-mode (arg key-arg)
+              (interactive "p")
+
+              (if god-local-mode
+                (funcall (key-binding (eval key-arg)))
+                (self-insert-command (or arg 1))))
+
+                  (use-package key-chord
+                    :elpaca t
+                    ;; :defer 1
+                    :ensure t
+                    :after (god-mode)
+                    :init (key-chord-mode 1)
+                    :config
+                    (key-chord-define-global "ii" 'god-mode-all)
+                    (key-chord-define-global "hf" 'hydra-vi/body)
+                    (key-chord-define-global "xs" 'save-buffer)
+                    (key-chord-define-global "jl" 'avy-goto-line)
+                    (key-chord-define-global "jw" 'ace-window)
+                    (key-chord-define-global "je" 'avy-goto-end-of-line)
+                    (key-chord-define-global "jk" 'avy-goto-char))
+#+END_SRC
+
+* Defaults
+#+BEGIN_SRC emacs-lisp
+      (setq make-backup-files nil)
+            (use-package hideshow
+              :elpaca nil
+
+              :after (emacs-lisp-mode org-mode))
+
+            ;; (use-package zop-to-char
+            ;;   :config
+            ;;   (setq zop-to-char-quit-at-point-keys '(?\C-q ?x))
+            ;;   :bind (("C-z" . zop-up-to-char)
+            ;;          ("A-d" . zop-to-char)))
+
+          (use-package winner
+            :elpaca nil
+            :defer 6
+            :config
+            (winner-mode 1)
+            :bind (("C-c w /" . winner-undo)
+                   ("C-c w _" . winner-redo)))
+
+            (use-package super-save
+              :elpaca t
+              :defer 2
+            :ensure t
+            :config
+            (super-save-mode +1))
+
+  (use-package binky-mode
+    :elpaca t
+    ;;:defer 7
+    :after (god-mode)
+    :hook (after-init-hook . (lambda () (binky-mode) (binky-margin-mode)))
+    :bind
+    (:map god-local-mode-map
+             ("SPC m" . binky-binky) ))
+
+          (use-package vterm
+            :elpaca t
+            :defer t)
+
+      (setq next-screen-context-lines 5)
+
+          (use-package rg
+            :elpaca t
+            :defer 9)
+#+END_SRC
+
+* Dired
+#+BEGIN_SRC emacs-lisp
+  (use-package dirvish
+    :elpaca t
+    :defer 3
+    :init
+    (dirvish-override-dired-mode)
+    :custom
+    (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+     '(("h" "~/"                          "Home")
+       ("d" "~/Downloads/"                "Downloads")))
+    :config
+    ;; (dirvish-peek-mode) ; Preview files in minibuffer
+    ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
+    (setq dirvish-mode-line-format
+          '(:left (sort symlink) :right (omit yank index)))
+    (setq dirvish-attributes
+          '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+    (setq delete-by-moving-to-trash t)
+    (setq dired-listing-switches
+          "-l --almost-all --human-readable --group-directories-first --no-group")
+    :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+    (("C-c f" . dirvish-fd)
+     ("C-c d d" . dirvish-dwm)
+     ("C-c d t" . dirvish-side)
+     :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+     ("a"   . dirvish-quick-access)
+     ("f"   . dirvish-file-info-menu)
+     ("y"   . dirvish-yank-menu)
+     ("N"   . dirvish-narrow)
+     ("^"   . dirvish-history-last)
+     ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+     ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+     ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+     ("TAB" . dirvish-subtree-toggle)
+     ("M-f" . dirvish-history-go-forward)
+     ("M-b" . dirvish-history-go-backward)
+     ("M-l" . dirvish-ls-switches-menu)
+     ("M-m" . dirvish-mark-menu)
+     ("M-t" . dirvish-layout-toggle)
+     ("M-s" . dirvish-setup-menu)
+     ("M-e" . dirvish-emerge-menu)
+     ("M-j" . dirvish-fd-jump)))
+#+END_SRC
+* appearance
+#+BEGIN_SRC emacs-lisp
+
+  ;; (setq doom-zenburn-brighter-comments t)
+  ;; (setq doom-zenburn-comment-bg t)
+  ;; (load-theme 'doom-zenburn :no-confirm)
+
+  (use-package doom-themes
+    :elpaca t
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+  (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+
+  (custom-set-faces
+  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
+  '(org-level-2 ((t (:inherit outline-2 :height 1.3))))
+  '(org-level-3 ((t (:inherit outline-3 :height 1.2))))
+  '(org-level-4 ((t (:inherit outline-4 :height 1.1))))
+  '(org-level-5 ((t (:inherit outline-5 :height 1.05)))))
+
+     (use-package all-the-icons
+       :elpaca t
+       :defer 10
+       :ensure t)
+
+      (use-package doom-modeline
+        :elpaca t
+        :ensure t
+        :init
+        ;;:hook (after-init . doom-modeline-mode)
+        :config
+        (setq doom-modeline-buffer-encoding nil))
+  
+  (add-hook 'elpaca-after-init-hook (lambda () (doom-modeline-mode)))
+
+     (use-package rainbow-delimiters
+       :elpaca t
+      :ensure t
+      :defer t
+      :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+
+* projects
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :elpaca t
+    :defer 2
+    :ensure t)
+#+END_SRC
+
+* Git
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :elpaca t
+    :ensure t
+    :defer 2
+    :commands (magit-status magit-get-current-branch)
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+  (use-package diff-hl
+    :elpaca t
+    :after (magit)
+    :ensure t
+    :init
+    (global-diff-hl-mode))
+#+END_SRC
+
+* emacs completion frameworks
+#+BEGIN_SRC emacs-lisp
+      (defun dw/minibuffer-backward-kill (arg)
+        "When minibuffer is completing a file name delete up to parent
+      folder, otherwise delete a word"
+        (interactive "p")
+        (if minibuffer-completing-file-name
+            ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+            (if (string-match-p "./" (minibuffer-contents))
+                (zap-up-to-char (- arg) ?/)
+              (delete-minibuffer-contents))
+          (delete-backward-char arg)))
+
+    (defvar vertico-repeat-map
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd ";") #'(lambda () "insert-;;" (interactive) (insert ";;")))
+        (define-key map (kbd "j") #'vertico-next)
+        (define-key map (kbd "k") #'vertico-previous)
+        (define-key map (kbd "l") #'vertico-exit)
+        (define-key map (kbd "SPC") #'vertico-insert)
+        map))
+
+
+    (dolist (cmd '(vertico-next vertico-previous))
+      (put cmd 'repeat-map 'vertico-repeat-map))
+
+      (use-package vertico
+        :elpaca t
+        ;;:defer 1
+        :after (god-mode)
+        :ensure t
+        :bind (:map vertico-map
+               (";" . vertico-next)
+               ("C-j" . vertico-next)
+               ("C-k" . vertico-previous)
+               ("C-f" . vertico-exit)
+               :map minibuffer-local-map
+               ("DEL" . dw/minibuffer-backward-kill))
+        :custom
+        (vertico-cycle t)
+        :init
+        (vertico-mode))
+
+      (use-package orderless
+        :elpaca t
+        :after (vertico)
+        :ensure t
+        :custom
+        (completion-styles '(orderless basic))
+        (completion-category-overrides '((file (styles basic partial-completion)))))
+
+      (defun dw/get-project-root ()
+        (when (fboundp 'projectile-project-root)
+          (projectile-project-root)))
+
+      (setq completion-ignore-case  t)
+
+      (setq read-file-name-completion-ignore-case t
+            read-buffer-completion-ignore-case t
+            completion-ignore-case t)
+
+      (use-package marginalia
+        :elpaca t
+        :after (vertico)
+        :ensure t
+        :config
+        (marginalia-mode))
+
+
+  (use-package embark
+    :elpaca t
+    :after (consult)
+    :ensure t
+    :bind
+    (("C-," . embark-act)         ;; pick some comfortable binding
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+    :init
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+    ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+    ;; strategy, if you want to see the documentation from multiple providers.
+    (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+    ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+    :config
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                   nil
+                   (window-parameters (mode-line-format . none)))))
+
+  ;; Consult users will also want the embark-consult package.
+  (use-package embark-consult
+    :elpaca t
+    :after (embark)
+    :ensure t ; only need to install it, embark loads it after consult if found
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode))
+
+#+END_SRC
+
+* searching
+#+BEGIN_SRC emacs-lisp
+    (use-package consult
+      :elpaca t
+      :after (god-mode)
+      ;;:defer 1
+      :bind (("C-M-l" . consult-imenu)
+             :map god-local-mode-map
+             ("; s" . consult-line)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
+         :map minibuffer-local-map
+         ("C-r" . consult-history))
+      :custom
+      (consult-project-root-function #'dw/get-project-root)
+      (completion-in-region-function #'consult-completion-in-region))
+
+    (define-key isearch-mode-map (kbd "M-RET")
+      #'isearch-exit-other-end)
+
+    (defun isearch-exit-other-end ()
+      "Exit isearch, at the opposite end of the string.
+  from https://endlessparentheses.com/leave-the-cursor-at-start-of-match-after-isearch.html"
+      (interactive)
+      (isearch-exit)
+      (goto-char isearch-other-end))
+
+#+END_SRC
+
+* notes
+#+BEGIN_SRC emacs-lisp
+  (use-package denote
+    :elpaca t
+    ;;:after (god-mode)
+    :defer 3
+    :config
+    (global-unset-key (kbd "C-x C-n"))
+    (global-set-key (kbd "C-x C-n C-s") #'consult-notes)
+    (global-set-key (kbd "C-x C-n C-m") #'denote)
+    (setq denote-known-keywords '("code" "history" "current-events"))
+    (setq denote-directory (expand-file-name "/home/isaac/denote/"))
+    (setq denote-file-type nil))
+
+  ;;(add-hook 'dired-mode-hook #'denote-dired-mode)
+
+  (use-package consult-notes
+    :elpaca t
+    :ensure t
+    :after (denote)
+    ;;:straight ( :type git :host github :repo "mclear-tools/consult-notes")
+    :commands (consult-notes consult-notes-search-in-all-notes)
+    :config
+    (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
+    ;;(global-unset-key (kbd "C-x C-n") nil)
+
+
+    ;; Set org-roam integration OR denote integration, e.g.:
+    (when (locate-library "denote")
+      (consult-notes-denote-mode)))
+
+
+
+#+END_SRC
+
+* Common Lisp
+#+BEGIN_SRC emacs-lisp
+  (use-package sly
+    :elpaca t
+    :mode (("\\.lisp\\'" . sly))
+    )
+  ;; (use-package sly
+  
+  ;; :straight (:type git :host github :repo "joaotavora/sly")
+  ;; :commands (sly sly-connect))
+
+  ;; (setq sly-lisp-implementations '((sbcl ("sbcl" "--core"
+  ;;     "sbcl.core-for-sly"))))
+#+END_SRC
+
+* Lua/Fennel
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode
+    :elpaca t
+
+    :mode (("\\.lua\\'" . lua-mode)))
+
+  (use-package fennel-mode
+    :elpaca t
+
+    :mode (("\\.fnl\\'" . fennel-mode))
+    :config
+    (setq fennel-program "~/.luarocks/bin/fennel --repl"))
+#+END_SRC
+
+* Clojure
+#+BEGIN_SRC emacs-lisp
+  (use-package clojure-mode
+    :elpaca t
+
+    :ensure t
+    :mode (("\\.clj\\'" . clojure-mode)
+           ("\\.edn\\'" . clojure-mode))
+    :init
+    ;; (add-hook 'clojure-mode-hook #'yas-minor-mode)
+    ;; (add-hook 'clojure-mode-hook #'subword-mode)
+    ;; (add-hook 'clojure-mode-hook #'eldoc-mode)
+    )
+
+  (use-package cider
+    :elpaca t
+  ;;   :straight (:type git :host github :repo "clojure-emacs/cider")
+    :ensure t
+    ;;:defer t
+    :after (clojure-mode)
+
+    :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+    :diminish subword-mode
+    :config
+      (setq nrepl-log-messages t
+          cider-repl-display-in-current-window t
+          cider-repl-use-clojure-font-lock t
+          cider-prompt-save-file-on-load 'always-save
+          cider-font-lock-dynamically '(macro core function var)
+          nrepl-hide-special-buffers t
+          cider-overlays-use-font-lock t)
+    (cider-repl-toggle-pretty-printing))
+#+END_SRC
+
+* Javascript/Typescript
+- TODO look into auto importing for JS
+  - [[eww: https://github.com/KarimAziev/js-imports][JS imports]]
+  - Switching to lsp-mode with lsp-completion-enable-additional-text-edit
+  - adding a jsconfig to the project
+- TODO linting issue
+  - [[eww:http://mitchgordon.me/software/2021/06/28/why-vscode-eslint-fast.html][flycheck-mode article]]
+    
+#+BEGIN_SRC emacs-lisp
+    (use-package js2-mode
+      :elpaca t
+      :defer t
+      :ensure t)
+
+  (use-package prettier-js
+    :elpaca t
+    :ensure t
+    :after (rjsx-mode)
+    :hook (rjxs . prettier-js-mode))
+
+    (add-hook 'js-mode-hook 'prettier-js-mode)
+    (add-hook 'web-mode-hook 'prettier-js-mode)
+  (add-hook 'rjxs-mode 'prettier-js-mode)
+
+    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+    ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+    ;; (add-hook 'js-mode-hook 'js2-minor-mode)
+
+    ;; (use-package js-mode
+
+    ;;   :init
+    ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+    ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+
+    (use-package rjsx-mode
+      :elpaca t
+      :defer t
+      :ensure t)
+
+  (use-package web-mode
+    :elpaca t
+    :ensure t
+    :after (rjsx-mode js2-mode))
+
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+
+  ;; (defun setup-tide-mode ()
+  ;;   "Sets up tide"
+  ;;   (interactive)
+  ;;   (tide-setup)
+  ;;   (flycheck-mode +1)
+  ;;   (tide-hl-identifier-mode +1))
+
+  (use-package tide
+    :elpaca t
+    :ensure t
+    :after (rjsx-mode corfu-mode flycheck)
+    :hook (rjsx-mode . setup-tide-mode))
+
+  ;;   (with-eval-after-load 'js-mode
+  ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+  ;;            (setq completion-category-defaults nil))
+
+#+END_SRC
+
+* Ansible
+#+BEGIN_SRC emacs-lisp
+  (use-package ansible
+    :elpaca t
+    :defer t
+    :mode (("\\.yml\\'" . ansible)))
+#+END_SRC
+* LSP
+#+BEGIN_SRC emacs-lisp
+            (use-package eglot
+              :elpaca t
+              :defer t
+                  :ensure t
+                  :commands (eglot eglot-ensure)
+                  :config
+                  (define-key eglot-mode-map (kbd "M-.") #'xref-find-definitions)
+                  :hook ((clojure-mode . eglot-ensure)
+                         ;;(js-mode . eglot-ensure)
+                         ))
+            ;; Option 1: Specify explicitly to use Orderless for Eglot
+
+              (setq completion-category-overrides '((eglot (styles orderless))))
+
+              (use-package consult-eglot
+                :elpaca t
+                :after (eglot)
+                :ensure t)
+
+  (use-package tree-sitter
+    :elpaca t
+    :defer t
+    :init
+    (global-tree-sitter-mode))
+
+  (use-package tree-sitter-langs
+    :elpaca t
+    :after (tree-sitter))
+
+    (add-hook 'js-mode-hook #'tree-sitter-hl-mode)
+
+      (use-package lsp-mode
+        :elpaca t
+        :commands lsp
+        :hook ((
+                web-mode
+                rjsx-mode
+                ;; javascript-ts-mode
+                ;; typescript-ts-mode
+                ;; jsx-ts-mode
+                ;; tsx-ts-mode
+                )
+               . lsp-deferred)
+        (lsp-completion-mode . my/lsp-mode-setup-completion)
+        (lsp-mode . lsp-enable-which-key-integration)
+        :config
+        (setq lsp-idle-delay 0.1
+              lsp-log-io nil
+              lsp-completion-provider :none
+              lsp-headerline-breadcrumb-enable nil
+              lsp-solargraph-use-bundler 't)
+        :init
+        (defun my/orderless-dispatch-flex-first (_pattern index _total)
+          (and (eq index 0) 'orderless-flex))
+
+        (defun my/lsp-mode-setup-completion ()
+          (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                '(orderless)))
+
+  ;;specific for JavaScript and requires VSCode
+  (setq lsp-eslint-server-command 
+     '("node" 
+       "/home/isaac/.vscode-oss/extensions/dbaeumer.vscode-eslint-2.4.0/server/out/eslintServer.js" 
+       "--stdio"))
+
+        ;; Optionally configure the first word as flex filtered.
+        (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+        ;; Optionally configure the cape-capf-buster.
+        (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+        (setq lsp-keymap-prefix "C-l"))
+
+
+        (add-hook 'lua-mode-hook #'tree-sitter-hl-mode)
+        (add-hook 'sh-mode-hook #'tree-sitter-hl-mode)
+
+#+END_SRC
+* autocomplete
+#+BEGIN_SRC emacs-lisp
+
+  (use-package cape
+    :elpaca t
+    :after (corfu)
+    :init
+    ;; Add `completion-at-point-functions', used by `completion-at-point'.
+    ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file))
+
+  (defvar corfu-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "j") #'corfu-next)
+      (define-key map (kbd "k") #'corfu-previous)
+      (define-key map (kbd "SPC") #'(lambda () "insert-, space" (interactive) (insert ", ")))
+      map))
+
+  (dolist (cmd '(corfu-next corfu-previous))
+    (put cmd 'repeat-map 'corfu-repeat-map))
+
+  (use-package corfu
+    :elpaca t
+    ;; Optional customizations
+     :custom
+     (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+     (corfu-auto t)                 ;; Enable auto completion
+     (corfu-auto-delay 0)
+     (corfu-auto-prefix 1)
+     (corfu-separator ?\s)          ;; Orderless field separator
+     :init
+     (global-corfu-mode)
+     :bind
+     (:map corfu-map ("C-j" . corfu-next)
+           ("," . corfu-next)))
+
+  (use-package emacs
+    :elpaca nil
+    ;;:elpaca nil
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 1)
+            ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+            ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+            ;; (setq read-extended-command-predicate
+            ;;       #'command-completion-default-include-p)
+            ;; Enable indentation+completion using the TAB key.
+            ;; `completion-at-point' is often bound to M-TAB.
+            (setq tab-always-indent 'complete))
+
+
+#+END_SRC
+
+* org
+#+BEGIN_SRC emacs-lisp
+
+  (setq ispell-program-name "/usr/bin/hunspell")
+
+  (setq ispell-hunspell-dict-paths-alist
+
+  '(("en_US" "~/Library/Spelling/en_US.dic")))
+
+  ;; (setq ispell-local-dictionary "en_US")
+
+  ;; (setq ispell-local-dictionary-alist
+
+  ;; ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
+
+  ;; ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+
+  ;; '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
+
+
+      (use-package org-bullets
+        :elpaca t
+      :after org
+      :hook (org-mode . org-bullets-mode)
+      :custom
+      (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+    ;; renames buffer when the name starts with title
+    (defun org+-buffer-name-to-title ()
+      "Rename buffer to value of #+title:."
+      (interactive)
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+          (rename-buffer (match-string 1)))))
+
+    (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+  (setq cape-dict-file "/home/isaac/Library/Spelling/en_US.dic")
+        ;; Turn on indentation and auto-fill mode for Org files
+      (defun dw/org-mode-setup ()
+        (org-bullets-mode)
+        (org-indent-mode)
+      ;;  (variable-pitch-mode 1)
+        (auto-fill-mode 0)
+        (visual-line-mode 1)
+        ;; (setq evil-auto-indent nil)
+        ;; (company-ispell)
+
+        (add-to-list 'completion-at-point-functions #'cape-ispell)
+        (add-to-list 'completion-at-point-functions #'cape-dict)
+        (org+-buffer-name-to-title))
+
+      (use-package org
+        :elpaca nil
+        :defer t
+        :hook (org-mode . dw/org-mode-setup)
+        :config
+
+        (unbind-key "C-," org-mode-map)
+        (setq org-agenda-start-with-log-mode t)
+        (setq org-log-done `time)
+        (setq org-log-into-drawer t))
+#+END_SRC
+
+* PDF
+#+BEGIN_SRC emacs-lisp
+          (add-hook 'doc-view-mode-hook (lambda ()
+                                      (local-set-key (kbd "C-j") 'doc-view-next-line-or-next-page) (local-set-key (kbd
+      "C-k") 'doc-view-previous-line-or-previous-page)))
+
+
+  ;; (add-hook 'doc-view-mode-hook
+
+
+  ;;   (lambda ()
+  ;;     (message "you are now in doc-view mode")
+  ;;    (define-key evil-normal-state-local-map (kbd "k") 'doc-view-previous-line-or-previous-page)
+  ;;    (define-key evil-normal-state-local-map (kbd "j") 'doc-view-next-line-or-next-page)))
+
+
+  (use-package pdf-tools
+    :elpaca t
+    :defer t)
+
+  (add-hook 'pdf-view-mode-hook
+            (lambda ()
+              (local-set-key (kbd "j") 'pdf-view-scroll-up-or-next-page)
+              (local-set-key (kbd "k") 'pdf-view-scroll-down-or-previous-page)))
+
+    ;; (use-package pdf-tools
+  
+    ;;   :defer t)
+
+    ;; (add-hook 'pdf-view-mode-hook
+    ;;           (lambda ()
+    ;;             (local-set-key (kbd "n") 'pdf-view-scroll-up-or-next-page)
+    ;;             (local-set-key (kbd "p") 'pdf-view-scroll-down-or-previous-page)))
+#+END_SRC
+
+* EWW
+#+BEGIN_SRC emacs-lisp
+  (use-package eww
+    :elpaca nil
+    :defer t
+    :config
+    (define-key eww-mode-map (kbd "C-j") #'forward-paragraph)
+    (define-key eww-mode-map (kbd "C-k") #'backward-paragraph))
+#+END_SRC
