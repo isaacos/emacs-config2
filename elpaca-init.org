@@ -1,437 +1,507 @@
 * god mode
 #+BEGIN_SRC emacs-lisp
 
-  (use-package browse-kill-ring
-   :elpaca t
-   ;;:after (god-mode)
-   :ensure t
-   :bind (("C-M-y" . browse-kill-ring)))
+          (use-package crux
+            ;;:after (god-mode)
+            :elpaca t
+            :ensure t
+            :bind (("C-a" . crux-move-beginning-of-line)
+                   ("C-o" . crux-smart-open-line)
+                   ("C-S-o" . crux-smart-open-line-above)
+                   ("M-o" . crux-other-window-or-switch-buffer)))
 
-  (use-package crux
-   ;;:after (god-mode)
-   :elpaca t
-   :ensure t
-   :bind (("C-a" . crux-move-beginning-of-line)
-          ("C-o" . crux-smart-open-line)
-          ("C-S-o" . crux-smart-open-line-above)
-          ("M-o" . crux-other-window-or-switch-buffer)))
+          (use-package selected
+            :after (god-mode) ; must load after god mode for kill region to behave correctly
+            :elpaca t
+            :ensure t
+            :commands selected-minor-mode
+            :init
+            (selected-global-mode)
+            (setq selected-org-mode-map (make-sparse-keymap))
+            :bind (:map selected-keymap
+                        ("C-q" . selected-off)
+                        ("C-u" . upcase-region)
+                        ("M-l" . downcase-region)
+                        ("d" . kill-region)
+                        ("C-m" . apply-macro-to-region-lines)))
 
-  (use-package selected
-   ;;:after (god-mode)
-   :elpaca t
-   :ensure t
-   :commands selected-minor-mode
-   :init
-   (selected-global-mode)
-   (setq selected-org-mode-map (make-sparse-keymap))
-   :bind (:map selected-keymap
-               ("C-q" . selected-off)
-               ("C-u" . upcase-region)
-               ("M-l" . downcase-region)
-               ("d" . kill-region)
-               ;;("C-w" . copy-region-as-kill)
-               ("C-m" . apply-macro-to-region-lines)
-               :map selected-org-mode-map
-               ("t" . org-table-convert-region)))
+          (use-package expand-region
+            :elpaca t
+            :ensure t
+            :after (selected)
+            :bind (("C-=" .  er/expand-region)
+                   :map selected-keymap
+                   ("C-)" . er/mark-inside-pairs)
+                   ("C-'" . er/mark-inside-quotes)))
 
-  (use-package expand-region
-   :elpaca t
-   ;;:after (god-mode)
-   :ensure t
-   :after (selected)
-   :bind (("C-=" .  er/expand-region)
-          :map selected-keymap
-          ;;(
-          ("C-)" . er/mark-inside-pairs)
-          ("C-'" . er/mark-inside-quotes)))
+          (use-package god-mode
+            :elpaca (god-mode :host github :repo "emacsorphanage/god-mode")
+            ;;:defer 1
+            ;;:after (avy hydra)
+            ;;:ensure t
+            :config
+            (setq god-exempt-major-modes nil)
+            (setq god-exempt-predicates nil)
+            (global-set-key (kbd "C-x C-1") #'delete-other-windows)
+            (global-set-key (kbd "C-x C-2") #'split-window-below)
+            (global-set-key (kbd "C-x C-3") #'split-window-right)
+            (global-set-key (kbd "C-x C-0") #'delete-window)
+            (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+            (global-set-key (kbd "C-x C-(") #'kmacro-start-macro)
+            (global-set-key (kbd "C-x C-)") #'kmacro-end-macro)
 
-   (use-package god-mode
-    :elpaca (god-mode :host github :repo "emacsorphanage/god-mode")
-    ;;:defer 4
-    ;;:after (avy hydra)
-    ;;:ensure t
-    :config
-    (setq god-exempt-major-modes nil)
-    (setq god-exempt-predicates nil)
-    (global-set-key (kbd "C-x C-1") #'delete-other-windows)
-    (global-set-key (kbd "C-x C-2") #'split-window-below)
-    (global-set-key (kbd "C-x C-3") #'split-window-right)
-    (global-set-key (kbd "C-x C-0") #'delete-window)
-    (global-set-key (kbd "C-x C-b") #'switch-to-buffer)
-    (global-set-key (kbd "C-x C-(") #'kmacro-start-macro)
-    (global-set-key (kbd "C-x C-)") #'kmacro-end-macro)
+            (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
+            (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
+            (global-set-key (kbd "<escape>") #'god-mode-all)
 
-    (define-key god-local-mode-map (kbd "[") #'backward-paragraph)
-    (define-key god-local-mode-map (kbd "]") #'forward-paragraph)
-    (global-set-key (kbd "<escape>") #'god-mode-all)
+            (require 'god-mode-isearch)
+            (define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
+            (define-key isearch-mode-map (kbd "x") #'god-mode-isearch-activate)
 
-    (require 'god-mode-isearch)
-    (define-key isearch-mode-map (kbd "<escape>") #'god-mode-isearch-activate)
-    (define-key isearch-mode-map (kbd "x") #'god-mode-isearch-activate)
+            (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
+            (define-key god-mode-isearch-map (kbd "x") #'(lambda () "insert-x in isearch" (interactive) (progn (isearch-printing-char (string-to-char "x")) (god-mode-isearch-disable))))
+            (define-key god-mode-isearch-map (kbd "5") #'anzu-isearch-query-replace)
+            (define-key god-mode-isearch-map (kbd "o") #'isearch-occur)
 
-    (define-key god-mode-isearch-map (kbd "<escape>") #'god-mode-isearch-disable)
-    (define-key god-mode-isearch-map (kbd "x") #'(lambda () "insert-x in isearch" (interactive) (progn (isearch-printing-char (string-to-char "x")) (god-mode-isearch-disable))))  
-    (define-key god-mode-isearch-map (kbd "5") #'anzu-isearch-query-replace)
-    (define-key god-mode-isearch-map (kbd "o") #'isearch-occur)
+            (defun unholy-kill-region ()
+              "runs kill region and exits god-mode"
+              (interactive)
+              (progn
+                (if (region-active-p)
+                    (call-interactively 'kill-region))
+                (god-mode-all -1)))
 
-    (define-key god-local-mode-map (kbd "i") #'god-mode-all)
-    (define-key god-local-mode-map (kbd ".") #'repeat)
+            (define-key god-local-mode-map (kbd "i") #'unholy-kill-region)
+            (define-key god-local-mode-map (kbd ".") #'repeat)
+            (global-set-key (kbd "C-t") ctl-x-map)
 
-    ;;(define-key god-local-mode-map (kbd "M-k") #'kill-line)
-    (define-key god-local-mode-map (kbd "C-S-E") #'end-of-line)
-    (define-key god-local-mode-map (kbd "C-S-A") #'beginning-of-line)
-    (define-key god-local-mode-map (kbd "C-S-F") #'forward-char)
-    (define-key god-local-mode-map (kbd "C-S-B") #'backward-char)
-    (define-key god-local-mode-map (kbd "C-S-N") #'next-line)
-    (define-key god-local-mode-map (kbd "C-S-P") #'previous-line)
+            ;;(define-key god-local-mode-map (kbd "z") #'repeat)
+            (define-key god-local-mode-map (kbd "C-S-E") #'end-of-line)
+            (define-key god-local-mode-map (kbd "C-S-A") #'beginning-of-line)
+            (define-key god-local-mode-map (kbd "C-S-F") #'forward-char)
+            (define-key god-local-mode-map (kbd "C-S-B") #'backward-char)
+            (define-key god-local-mode-map (kbd "C-S-N") #'next-line)
+            (define-key god-local-mode-map (kbd "C-S-P") #'previous-line)
+            (define-key god-local-mode-map (kbd "C-S-S") #'isearch-forward)
 
-    (define-key god-local-mode-map (kbd ";") nil)
-    (define-key god-local-mode-map (kbd "; '") #'match-paren)
-    (define-key god-local-mode-map (kbd "; i") #'imenu)
-    (define-key god-local-mode-map (kbd "; x f") #'rgrep)
+            ;; (define-key god-local-mode-map (kbd "h") #'backward-char)
+            ;; ;; (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
+            ;; ;; (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
+            ;; (define-key god-local-mode-map (kbd "l") #'forward-char)
+            ;; (define-key god-local-mode-map (kbd "b") #'backward-to-word)
+            ;; (define-key god-local-mode-map (kbd "f") #'forward-to-word)
 
-    (define-key god-local-mode-map (kbd "h") #'backward-char)
-    (define-key god-local-mode-map (kbd "j") (kbd "C-n"))
-    (define-key god-local-mode-map (kbd "k") (kbd "C-p"))
-    (define-key god-local-mode-map (kbd "l") #'forward-char)
-    (define-key god-local-mode-map (kbd "b") #'backward-to-word)
-    (define-key god-local-mode-map (kbd "f") #'forward-to-word)
-    (define-key god-local-mode-map (kbd "t") #'set-mark-command) ;;taken from Xah Fly Keys
+            ;; (define-key god-local-mode-map (kbd "t") #'set-mark-command) ;;taken from Xah Fly Keys
 
-    (define-key god-local-mode-map (kbd "n") #'avy-goto-char)
-    (define-key god-local-mode-map (kbd "p") #'hydra-paragraph/body)
+            ;; (define-key god-local-mode-map (kbd "n") #'avy-goto-word-1)
+            ;; (define-key god-local-mode-map (kbd "p") #'isearch-forward-symbol-at-point)
 
-    (global-set-key (kbd "M-a") #'beginning-of-buffer)
-    (global-set-key (kbd "M-e") #'end-of-buffer)
 
-   (bind-keys :map god-local-mode-map
-              :prefix "d"
-              :prefix-map my-vimish-d-map
-              ("d" . crux-smart-kill-line)
-              ("s" . zap-to-char)
-              ("t" . zap-up-to-char)
-              ("l" . delete-char))
 
-  (bind-keys :map god-local-mode-map
-              :prefix "SPC"
-              :prefix-map my-spc-leader-map
-              ("SPC" . execute-extended-command)
-              ("l" . hydra-bracket-mov/body))
+        (defhydra hydra-word-mov (nil nil)
 
-  (defun my-god-mode-update-cursor-type ()
-    (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
+          ("f" forward-word "in")
+          ("b" backward-word "out")
+          ("SPC" set-mark-command)
+          ("i" nil))
+      (global-set-key [remap forward-word] 'hydra-word-mov/forward-word)
+    (global-set-key [remap backward-word] 'hydra-word-mov/backward-word)
 
-  (add-hook 'post-command-hook #'my-god-mode-update-cursor-type)
+            (define-key god-local-mode-map (kbd "u") #'pop-to-mark-command)
 
-  (setq god-mod-alist
-      '((nil . "C-")
-      ("m" . "M-")
-      ("g" . "C-M-")))
 
-  (define-key isearch-mode-map (kbd "'") 'isearch-exit)
+            (global-set-key (kbd "M-a") #'beginning-of-buffer)
+            (global-set-key (kbd "M-e") #'end-of-buffer)
 
-  (define-key god-mode-isearch-map (kbd ";") 'avy-isearch)
+            (bind-keys :map god-local-mode-map
+                       :prefix "d"
+                       :prefix-map my-vimish-d-map
+                       ("d" . crux-smart-kill-line) ;; a safer option to prevent unmatched parantheses
+                       ("s" . zap-to-char)
+                       ("t" . zap-up-to-char)
+                       ("l" . delete-char))
 
-   (defun dwim/goto-char (arg char)
-      "Move pointer up to and including ARG'th occurrence of CHAR.
-              Case is ignored if `case-fold-search' is non-nil in the current buffer.
-              Goes backward if ARG is negative; error if CHAR not found."
-      (interactive "p\ncchar: ")
-      (if (char-table-p translation-table-for-input)
-          (setq char (or (aref translation-table-for-input char) char)))
-      (progn (search-forward (char-to-string char)
-                             nil nil arg) (point)))
+            ;; (bind-keys :map god-local-mode-map
+            ;;            :prefix ";"
+            ;;            :prefix-map alternate-map
+            ;;            ("'" . match-paren)
 
-  (defvar xah-brackets '("“”" "()" "[]" "{}" "<>" "＜＞" "（）" "［］" "｛｝" "❛❜" "❝❞" "❨❩" "❪❫" "❴❵" "❬❭" "❮❯" "❰❱"))
+            ;;            ("l" . recenter-top-bottom))
 
-    ;; "A list of strings, each element is a string of (defconst xah-right-brackets
-    ;; (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
+            ;; (bind-keys :map god-local-mode-map
+            ;;            :prefix "SPC"
+            ;;            :prefix-map my-spc-leader-map
+            ;;            ("SPC" . execute-extended-command)
+            ;;            ("l" . hydra-bracket-mov/body)
+            ;;            ("p f" . project-find-file)
+            ;;            ("i" . imenu)
+            ;;            ("x f" . rgrep))
 
-  (defconst xah-left-brackets
-    (mapcar (lambda (x) (substring x 0 1)) xah-brackets)
-    "List of left bracket chars. Each element is a string.")
+            ;; (defun my-god-mode-update-cursor-type ()
+            ;;   (setq cursor-type (if (or god-local-mode buffer-read-only) 'box 'bar)))
 
-  (defconst xah-right-brackets
-    (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
-    "List of right bracket chars. Each element is a string.")
+            ;; (add-hook 'post-command-hook #'my-god-mode-update-cursor-type)
 
-  (defun xah-backward-left-bracket ()
-    "Move cursor to the previous occurrence of left bracket.
-  The list of brackets to jump to is defined by `xah-left-brackets'.
-  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
-  Version 2015-10-01"
-    (interactive)
-    (re-search-backward (regexp-opt xah-left-brackets) nil t))
+            (setq god-mod-alist
+                  '((nil . "C-")
+                    ("m" . "M-")
+                    ("g" . "C-M-")))
 
-  (defun forward-left-bracket ()
-    "Move cursor to the next occurrence of left bracket.
-  The list of brackets to jump to is defined by `xah-right-brackets'.
-  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
-  Version 2015-10-01"
-    (interactive)
-    (re-search-forward (regexp-opt xah-left-brackets) nil t))
+            (define-key god-mode-isearch-map (kbd "SPC") 'isearch-exit)
 
-  (defun my/smart-forward-list (arg)
-    "Move to the start of the next list"
-    (interactive "p")
-    (if (looking-at "\\s(")
-        (progn
-          (forward-list 2)
-          (backward-list 1))
-      (progn 
-        (re-search-forward (regexp-opt xah-left-brackets) (looking-at (regexp-opt xah-right-brackets)) t)
-        (backward-char 1))))
+            (define-key god-mode-isearch-map (kbd "v") 'avy-isearch)
 
-  (defhydra hydra-paragraph (:color red :hint nil)
-      ""
-    ("q" nil)
-    ("l" forward-word "forward")
-    ("j" forward-paragraph "next")
-    ("k" backward-paragraph "prev")
-    ("h" backward-word "backard")
-    ("SPC" hydra-vi/body :exit t)
-    ("m" set-mark-command "mark"))
+            (defun dwim/goto-char (arg char)
+              "Move pointer up to and including ARG'th occurrence of CHAR.
+                        Case is ignored if `case-fold-search' is non-nil in the current buffer.
+                        Goes backward if ARG is negative; error if CHAR not found."
+              (interactive "p\ncchar: ")
+              (if (char-table-p translation-table-for-input)
+                  (setq char (or (aref translation-table-for-input char) char)))
+              (progn (search-forward (char-to-string char)
+                                     nil nil arg) (point)))
 
-  (defhydra hydra-search (:color red :hint nil)
-      ""
-    ("q" nil)
-    ("s" isearch-repeat-forward "forward")
-    ("r" isearch-repeat-backward "backward")
-    ("j" avy-next "avy-next")
-    ("k" avy-prev "avy-prev")
-    ("." isearch-forward-thing-at-point "at point")
-    ("m" set-mark-command "mark"))
+            (defvar xah-brackets '("“”" "()" "[]" "{}" "<>" "＜＞" "（）" "［］" "｛｝" "❛❜" "❝❞" "❨❩" "❪❫" "❴❵" "❬❭" "❮❯" "❰❱"))
 
-  (defun xah-forward-right-bracket ()
-    "Move cursor to the next occurrence of right bracket.
-  The list of brackets to jump to is defined by `xah-right-brackets'.
-  URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
-  Version 2015-10-01"
-    (interactive)
-    (re-search-forward (regexp-opt xah-right-brackets) nil t))
+            ;; "A list of strings, each element is a string of (defconst xah-right-brackets
+            ;; (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
 
-  (defun avy-goto-open-brackets ()
-    (interactive)
-    (let ((avy-command this-command))   ; for look up in avy-orders-alist
-      (avy-jump (regexp-opt xah-left-brackets))))
+            (defconst xah-left-brackets
+              (mapcar (lambda (x) (substring x 0 1)) xah-brackets)
+              "List of left bracket chars. Each element is a string.")
 
-  (defun avy-goto-word-0-below-in-line ()
-    "Jump forward to words in the current line"
-    (interactive)
-    (avy-with avy-goto-word-0
-      (avy-goto-word-0 nil (point) (line-end-position))))
+            (defconst xah-right-brackets
+              (mapcar (lambda (x) (substring x 1 2)) xah-brackets)
+              "List of right bracket chars. Each element is a string.")
 
-  (defun avy-goto-word-0-above-in-line ()
-    "Jump forward to words in the current line"
-    (interactive)
-    (avy-with avy-goto-word-0
-      (avy-goto-word-0 nil (line-beginning-position) (point))))
+            (defun xah-backward-left-bracket ()
+              "Move cursor to the previous occurrence of left bracket.
+            The list of brackets to jump to is defined by `xah-left-brackets'.
+            URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+            Version 2015-10-01"
+              (interactive)
+              (re-search-backward (regexp-opt xah-left-brackets) nil t))
 
-  (defhydra hydra-bracket-mov (:color red :hint nil)
-      "
-  ^By List^             ^By Level^           ^Actions^  
-  ^^^^^^^^----------------------------------------------
-  _j_: next          _h_: higher        _SPC_: vi 
-  _k_: prev          _l_: lower         _m_: mark-sexp
-  _e_: end-of        _w_: avy-word                ^ ^
-  "
-    ("q" nil)
-    (";" nil)
-    ("j" my/smart-forward-list)
-    ("k" backward-list)
-    ("h" backward-up-list)
-    ("l" down-list)
-    ("e" forward-list)
-    ("w" avy-goto-word-1 :exit t)
-    ("m" easy-mark-sexp)
-    ("SPC" hydra-vi/body :exit t))
+            (defun forward-left-bracket ()
+              "Move cursor to the next occurrence of left bracket.
+            The list of brackets to jump to is defined by `xah-right-brackets'.
+            URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+            Version 2015-10-01"
+              (interactive)
+              (re-search-forward (regexp-opt xah-left-brackets) nil t))
 
-  (defhydra hydra-avy (:color teal :hint nil)
-    "
-  ^^             ^^           ^^  
-  ^^^^^^^^----------------------------------------------
-  _j_: char          _SPC_: ws        _s_: timer 
-  _w_: word-0        _l_: line        _r_: region
-  _e_: word-1        _f_: char-inline                ^ ^
-  "
-    ("j" avy-goto-char)
-    ("w" avy-goto-word-0 )
-    ("SPC" avy-goto-whitespace-end)
-    ("e" avy-goto-word-1 )
-    ("l" avy-goto-line)
-    ("s" avy-goto-char-timer)
-    ("r" avy-kill-ring-save-region )
-    ("f" avy-goto-char-in-line)
-    ("q" nil))
+            (defun my/smart-forward-list (arg)
+              "Move to the start of the next list"
+              (interactive "p")
+              (if (looking-at "\\s(")
+                  (progn
+                    (forward-list 2)
+                    (backward-list 1))
+                (progn 
+                  (re-search-forward (regexp-opt xah-left-brackets) (looking-at (regexp-opt xah-right-brackets)) t)
+                  (backward-char 1))))
 
+            ;; (defhydra hydra-paragraph (:color red :hint nil)
+            ;;   ""
+            ;;   ("q" nil)
+            ;;   ("l" forward-word "forward")
+            ;;   ("j" forward-paragraph "next")
+            ;;   ("k" backward-paragraph "prev")
+            ;;   ("h" backward-word "backard")
+            ;;   ("m" set-mark-command "mark"))
+
+            (defun xah-forward-right-bracket ()
+              "Move cursor to the next occurrence of right bracket.
+            The list of brackets to jump to is defined by `xah-right-brackets'.
+            URL `http://xahlee.info/emacs/emacs/emacs_navigating_keys_for_brackets.html'
+            Version 2015-10-01"
+              (interactive)
+              (re-search-forward (regexp-opt xah-right-brackets) nil t))
+
+            (defun avy-goto-open-brackets ()
+              (interactive)
+              (avy-jump (regexp-opt xah-left-brackets)))
+
+              ;; (let ((avy-command this-command))   ; for look up in avy-orders-alist
+              ;;   ))
+
+            (defun avy-goto-word-0-below-in-line ()
+              "Jump forward to words in the current line"
+              (interactive)
+              (avy-with avy-goto-word-0
+                (avy-goto-word-0 nil (point) (line-end-position))))
+
+            (defun avy-goto-word-0-above-in-line ()
+              "Jump forward to words in the current line"
+              (interactive)
+              (avy-with avy-goto-word-0
+                (avy-goto-word-0 nil (line-beginning-position) (point))))
+
+            (defhydra hydra-bracket-mov (:color red :hint nil)
+              "
+            ^By List^             ^By Level^           ^Actions^  
+            ^^^^^^^^----------------------------------------------
+            _n_: next          _o_: higher        
+            _p_: prev          _i_: inner         _m_: mark-sexp
+            _e_: end-of        _w_: avy-word                ^ ^
+            "
+              ("q" nil)
+              (";" nil)
+              ("n" my/smart-forward-list)
+              ("p" backward-list)
+              ("o" backward-up-list)
+              ("i" down-list)
+              ("e" forward-list)
+              ("w" avy-goto-word-1 :exit t)
+              ("a" avy-goto-open-brackets)
+              ("m" easy-mark-sexp))
+
+            ;; (defhydra hydra-avy (:color teal :hint nil)
+            ;;   "
+            ;; ^^             ^^           ^^  
+            ;; ^^^^^^^^----------------------------------------------
+            ;; _j_: char          _SPC_: ws        _s_: timer 
+            ;; _w_: word-0        _l_: line        _r_: region
+            ;; _e_: word-1        _f_: char-inline                ^ ^
+            ;; "
+            ;;   ("j" avy-goto-char)
+            ;;   ("w" avy-goto-word-0 )
+            ;;   ("SPC" avy-goto-whitespace-end)
+            ;;   ("e" avy-goto-word-1 )
+            ;;   ("l" avy-goto-line)
+            ;;   ("s" avy-goto-char-timer)
+            ;;   ("r" avy-kill-ring-save-region )
+            ;;   ("f" avy-goto-char-in-line)
+            ;;   ("q" nil))
+
+            ;;)
   )
+          (use-package browse-kill-ring
+            :elpaca t
+            :after (god-mode)
+            :ensure t
+            :bind (("C-M-y" . browse-kill-ring)
+                   ("C-c y" . browse-kill-ring)
 
-  ;;(add-hook 'after-init-hook 'god-mode-all)
+                   ))
+
+
+          ;;(add-hook 'after-init-hook 'god-mode-all)
 
 #+END_SRC
+* 
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
-        ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
-                  (use-package which-key
-                    :elpaca t
-                    :after (god-mode)
-                    :init (which-key-mode)
-                    (which-key-enable-god-mode-support)
-                    :diminish which-key-mode
-                    :config
-                    (setq which-key-idle-delay 0.3))
+                ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
+                          (use-package which-key
+                            :elpaca t
+                            :after (god-mode)
+                            :init (which-key-mode)
+                            (which-key-enable-god-mode-support)
+                            :diminish which-key-mode
+                            :config
+                            (setq which-key-idle-delay 0.3))
 
-                  (global-set-key (kbd "C-x m") #'eshell)
+                          (global-set-key (kbd "C-x m") #'eshell)
 
-                  (defun match-paren (arg)
-                    "Go to the matching paren if on a paren; otherwise insert %."
-                    (interactive "p")
-                    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-                          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-                          (t (self-insert-command (or arg 1)))))
+                          (defun match-paren (arg)
+                            "Go to the matching paren if on a paren; otherwise insert %."
+                            (interactive "p")
+                            (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+                                  ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+                                  (t (self-insert-command (or arg 1)))))
 
-                  (use-package avy
-                    :elpaca t
-                    :after (key-chord)
-                    :init
-                    (setq avy-all-windows 'all-frames)
-                    (setq avy-style 'at)
-                    (setq avy-highlight-first t)
-                    (setq avy-styles-alist '((avy-goto-char . at)
-                       (avy-goto-line . at-full)
-                       (avy-goto-end-of-line . post)))
-                    (setq avy-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
-
-                  (use-package anzu
-                    :elpaca t
-                    ;;:defer 2
-                    :after (god-mode)
-                    :ensure t
-                    :bind (
-                           (:map god-local-mode-map
-                                 ("; r" . anzu-query-replace-at-cursor)))
-                    :config
-                    (global-anzu-mode +1)
-                    (custom-set-variables
-                      '(anzu-mode-lighter "")
-                      '(anzu-replace-to-string-separator " => "))
-
-                    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-                    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
-                    )
-
-      (use-package ace-window
+      (use-package easy-kill
         :elpaca t
-        ;;:defer 1
-        ;;:after (avy)
-        :ensure t
-        :bind (("C-x o" . ace-window))
+    :after (god-mode)
+        :bind (:map easy-kill-base-map
+                    ("n" . easy-kill-shrink)
+                    ("e" . easy-kill-expand))
         :config
-        ;;customize to make face more visible
+        (global-set-key [remap kill-ring-save] 'easy-kill))
+
+                          (use-package avy
+                            :elpaca t
+                            :after (key-chord)
+                            :init
+                            (setq avy-all-windows 'all-frames)
+                            (setq avy-style 'at)
+                            (setq avy-highlight-first t)
+                            (setq avy-styles-alist '((avy-goto-char . at)
+                               (avy-goto-line . at-full)
+                               (avy-goto-end-of-line . post)))
+                            (setq avy-keys '(?r ?s ?t ?d ?h ?n ?e ?i))
+                            ;; (setq avy-keys '(?s ?d ?f ?g ?h ?j ?k ?l))
+      :config
+      ;; (defcustom comma-prefix-alist
+      ;;   '((?n . avy-goto-line)
+      ;;     (?e . avy-goto-end-of-line)
+      ;;     (?i . avy-goto-char)
+      ;;     (?o . avy-goto-open-brackets))
+      ;;   "Alist of ...")
+
+      ;; (defun comma-prefix (char &optional arg)
+      ;;   "use comma as a prefix for comma-prefix-alist"
+      ;;   (interactive "c")
+      ;;   (let ((command (alist-get char comma-prefix-alist)))
+      ;;     (if command
+      ;;         (call-interactively command)
+      ;;       (progn
+      ;;         (self-insert-command (or arg 1))
+      ;;         (insert char)))))
+
+      ;; (global-set-key (kbd ",") #'comma-prefix)
 
 
-  (custom-set-faces
-         '(aw-leading-char-face
-           ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
+  (defcustom my/smart-avy-goto-char-alist
+        '((?\C-n . avy-goto-line)
+          (?\C-e . avy-goto-end-of-line)
+          (?\C-o . avy-goto-open-brackets)
+          (?\C-r . avy-copy-region))
+        "Alist of ...")
 
-        (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
-        (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face))
+      (defun my/smart-avy-goto-char (char &optional arg)
+        "Uses an alist to determine if it is running avy-goto-char or a different avy command"
+        (interactive "c")
+        (let ((command (alist-get char my/smart-avy-goto-char-alist)))
+          (if command
+              (call-interactively command)
+            (avy-goto-char char))))
 
-        (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l)))
+  (global-set-key (kbd "M-j") #'my/smart-avy-goto-char)
 
-      (use-package puni
-        :elpaca t
-        ;;:defer 5
-        :after (god-mode)
-        :bind (
-               ("C-<" . puni-barf-forward)
-               ("C->" . puni-slurp-forward)
-               :map god-local-mode-map
-               ("; k" . puni-kill-line)))
 
-    (use-package hydra
-      :elpaca t
-      ;;:defer 1
-      :after (god-mode)
-      :ensure t)
+                            )
 
-    (defun kmacro-toggle-start-end ()
-      "Starts kmacro unless one is already in progress than it ends it"
-      (interactive)
-      (if defining-kbd-macro
-          (kmacro-end-macro 1)
-        (kmacro-start-macro 0)))
+                          (use-package anzu
+                            :elpaca t
+                            ;;:defer 2
+                            :after (god-mode)
+                            :ensure t
+                            :bind (("C-c r" . anzu-query-replace-at-cursor))
+                            :config
+                            (global-anzu-mode +1)
+                            (custom-set-variables
+                              '(anzu-mode-lighter "")
+                              '(anzu-replace-to-string-separator " => "))
 
-            (defun run-arg-in-god-mode (arg key-arg)
-              (interactive "p")
+                            (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+                            (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+                            )
 
-              (if god-local-mode
-                (funcall (key-binding (eval key-arg)))
-                (self-insert-command (or arg 1))))
+              (use-package ace-window
+                :elpaca t
+                ;;:defer 1
+                ;;:after (avy)
+                :ensure t
+                :bind (("C-x o" . ace-window))
+                :config
+                ;;customize to make face more visible
 
-                  (use-package key-chord
-                    :elpaca t
-                    ;; :defer 1
-                    :ensure t
-                    :after (god-mode)
-                    :init (key-chord-mode 1)
-                    :config
-                    (key-chord-define-global "ii" 'god-mode-all)
-                    (key-chord-define-global "hf" 'hydra-vi/body)
-                    (key-chord-define-global "xs" 'save-buffer)
-                    (key-chord-define-global "jl" 'avy-goto-line)
-                    (key-chord-define-global "jw" 'ace-window)
-                    (key-chord-define-global "je" 'avy-goto-end-of-line)
-                    (key-chord-define-global "jk" 'avy-goto-char))
+
+          (custom-set-faces
+                 '(aw-leading-char-face
+                   ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
+
+                (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
+                (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face))
+        (setq aw-keys '(?r ?s ?t ?d ?h ?n ?e ?i))
+                ;; (setq aw-keys '(?s ?d ?f ?g ?h ?j ?k ?l))
+                )
+
+              (use-package puni
+                :elpaca t
+                ;;:defer 5
+                :after (god-mode)
+                :bind (
+                       ("C-<" . puni-barf-forward)
+                       ("C->" . puni-slurp-forward)))
+
+            (use-package hydra
+              :elpaca t
+              ;;:defer 1
+              :after (god-mode)
+              :ensure t)
+
+            (defun kmacro-toggle-start-end ()
+              "Starts kmacro unless one is already in progress than it ends it"
+              (interactive)
+              (if defining-kbd-macro
+                  (kmacro-end-macro 1)
+                (kmacro-start-macro 0)))
+
+                    (defun run-arg-in-god-mode (arg key-arg)
+                      (interactive "p")
+
+                      (if god-local-mode
+                        (funcall (key-binding (eval key-arg)))
+                        (self-insert-command (or arg 1))))
+
+  (use-package key-chord
+    :elpaca t
+    ;; :defer 1
+    :ensure t
+    :after (god-mode)
+    :init (key-chord-mode 1)
+    :config
+    (setq key-chord-two-keys-delay 0.08)
+    ;;(setq key-chord-one-key-delay 0.08)
+    (key-chord-define-global "bb" 'switch-to-buffer)
+    (key-chord-define-global "ii" 'god-mode-all)
+    (key-chord-define-global "xs" 'save-buffer)
+    (key-chord-define-global "jl" 'avy-goto-line)
+    (key-chord-define-global "nw" 'ace-window)
+    (key-chord-define-global "je" 'avy-goto-end-of-line)
+    (key-chord-define-global "nt" 'god-execute-with-current-bindings))
 #+END_SRC
 
 * Defaults
 #+BEGIN_SRC emacs-lisp
-      (setq make-backup-files nil)
-            (use-package hideshow
+        (setq make-backup-files nil)
+              (use-package hideshow
+                :elpaca nil
+
+                :after (emacs-lisp-mode org-mode))
+  (setq-default show-trailing-whitespace t)
+              ;; (use-package zop-to-char
+              ;;   :config
+              ;;   (setq zop-to-char-quit-at-point-keys '(?\C-q ?x))
+              ;;   :bind (("C-z" . zop-up-to-char)
+              ;;          ("A-d" . zop-to-char)))
+
+            (use-package winner
               :elpaca nil
+              :defer 6
+              :config
+              (winner-mode 1)
+              :bind (("C-c w /" . winner-undo)
+                     ("C-c w _" . winner-redo)))
 
-              :after (emacs-lisp-mode org-mode))
+              (use-package super-save
+                :elpaca t
+                :defer 2
+              :ensure t
+              :config
+              (super-save-mode +1))
 
-            ;; (use-package zop-to-char
-            ;;   :config
-            ;;   (setq zop-to-char-quit-at-point-keys '(?\C-q ?x))
-            ;;   :bind (("C-z" . zop-up-to-char)
-            ;;          ("A-d" . zop-to-char)))
+    (use-package binky-mode
+      :elpaca t
+      ;;:defer 7
+      :after (god-mode)
+      :hook (after-init-hook . (lambda () (binky-mode) (binky-margin-mode)))
+      :bind
+      (:map god-local-mode-map
+               ("C-c m" . binky-binky) ))
 
-          (use-package winner
-            :elpaca nil
-            :defer 6
-            :config
-            (winner-mode 1)
-            :bind (("C-c w /" . winner-undo)
-                   ("C-c w _" . winner-redo)))
-
-            (use-package super-save
+            (use-package vterm
               :elpaca t
-              :defer 2
-            :ensure t
-            :config
-            (super-save-mode +1))
+              :defer t)
 
-  (use-package binky-mode
-    :elpaca t
-    ;;:defer 7
-    :after (god-mode)
-    :hook (after-init-hook . (lambda () (binky-mode) (binky-margin-mode)))
-    :bind
-    (:map god-local-mode-map
-             ("SPC m" . binky-binky) ))
+        (setq next-screen-context-lines 5)
 
-          (use-package vterm
-            :elpaca t
-            :defer t)
-
-      (setq next-screen-context-lines 5)
-
-          (use-package rg
-            :elpaca t
-            :defer 9)
+            (use-package rg
+              :elpaca t
+              :defer 9)
 #+END_SRC
 
 * Dired
@@ -476,61 +546,70 @@
      ("M-t" . dirvish-layout-toggle)
      ("M-s" . dirvish-setup-menu)
      ("M-e" . dirvish-emerge-menu)
-     ("M-j" . dirvish-fd-jump)))
+     ("M-j" . dirvish-fd-jump)
+     ("J" . dired-goto-file)
+     ("K" . dired-do-kill-lines)
+     ("j" . dired-next-line)
+     ("k" . dired-previous-line)))
 #+END_SRC
 * appearance
 #+BEGIN_SRC emacs-lisp
 
-  ;; (setq doom-zenburn-brighter-comments t)
-  ;; (setq doom-zenburn-comment-bg t)
-  ;; (load-theme 'doom-zenburn :no-confirm)
+    ;; (setq doom-zenburn-brighter-comments t)
+    ;; (setq doom-zenburn-comment-bg t)
+    ;; (load-theme 'doom-zenburn :no-confirm)
 
-  (use-package doom-themes
+    (use-package doom-themes
+      :elpaca t
+    :ensure t
+    :config
+    ;; Global settings (defaults)
+    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t) ; if nil, italics is universally disabled
+    (load-theme 'doom-miramare t)
+
+    ;; Enable flashing mode-line on errors
+    (doom-themes-visual-bell-config)
+    ;; Enable custom neotree theme (all-the-icons must be installed!)
+    (doom-themes-neotree-config)
+    ;; or for treemacs users
+    ;;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+    (doom-themes-treemacs-config)
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config))
+
+    (custom-set-faces
+    '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
+    '(org-level-2 ((t (:inherit outline-2 :height 1.3))))
+    '(org-level-3 ((t (:inherit outline-3 :height 1.2))))
+    '(org-level-4 ((t (:inherit outline-4 :height 1.1))))
+    '(org-level-5 ((t (:inherit outline-5 :height 1.05)))))
+
+  (use-package nerd-icons
+      :elpaca t
+      :ensure t)
+
+
+(use-package all-the-icons
     :elpaca t
-  :ensure t
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
+    :ensure t)
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  (doom-themes-neotree-config)
-  ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-  (doom-themes-treemacs-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
 
-  (custom-set-faces
-  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
-  '(org-level-2 ((t (:inherit outline-2 :height 1.3))))
-  '(org-level-3 ((t (:inherit outline-3 :height 1.2))))
-  '(org-level-4 ((t (:inherit outline-4 :height 1.1))))
-  '(org-level-5 ((t (:inherit outline-5 :height 1.05)))))
+        (use-package doom-modeline
+          :elpaca t
+          :ensure t
+          :init
+          ;;:hook (after-init . doom-modeline-mode)
+          :config
+          (setq doom-modeline-buffer-encoding nil))
 
-     (use-package all-the-icons
-       :elpaca t
-       :defer 10
-       :ensure t)
+    (add-hook 'elpaca-after-init-hook (lambda () (doom-modeline-mode)))
 
-      (use-package doom-modeline
-        :elpaca t
+       (use-package rainbow-delimiters
+         :elpaca t
         :ensure t
-        :init
-        ;;:hook (after-init . doom-modeline-mode)
-        :config
-        (setq doom-modeline-buffer-encoding nil))
-  
-  (add-hook 'elpaca-after-init-hook (lambda () (doom-modeline-mode)))
-
-     (use-package rainbow-delimiters
-       :elpaca t
-      :ensure t
-      :defer t
-      :hook (prog-mode . rainbow-delimiters-mode))
+        :defer t
+        :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 * projects
@@ -576,7 +655,9 @@
       (let ((map (make-sparse-keymap)))
         (define-key map (kbd ";") #'(lambda () "insert-;;" (interactive) (insert ";;")))
         (define-key map (kbd "j") #'vertico-next)
+        (define-key map (kbd "n") #'vertico-next)
         (define-key map (kbd "k") #'vertico-previous)
+        (define-key map (kbd "p") #'vertico-previous)
         (define-key map (kbd "l") #'vertico-exit)
         (define-key map (kbd "SPC") #'vertico-insert)
         map))
@@ -667,8 +748,7 @@
       :after (god-mode)
       ;;:defer 1
       :bind (("C-M-l" . consult-imenu)
-             :map god-local-mode-map
-             ("; s" . consult-line)
+             ("C-c s" . consult-line)
          :map isearch-mode-map
          ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
          ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
@@ -696,12 +776,14 @@
 #+BEGIN_SRC emacs-lisp
   (use-package denote
     :elpaca t
-    ;;:after (god-mode)
+    :after (god-mode)
     :defer 3
+    :bind (("C-c n s" . consult-notes)
+                ("C-c n m" . denote))
     :config
-    (global-unset-key (kbd "C-x C-n"))
-    (global-set-key (kbd "C-x C-n C-s") #'consult-notes)
-    (global-set-key (kbd "C-x C-n C-m") #'denote)
+    ;;(global-unset-key (kbd "C-x C-n"))
+    ;;(global-set-key (kbd "C-x C-n C-s") #'consult-notes)
+    ;;(global-set-key (kbd "C-x C-n C-m") #'denote)
     (setq denote-known-keywords '("code" "history" "current-events"))
     (setq denote-directory (expand-file-name "/home/isaac/denote/"))
     (setq denote-file-type nil))
@@ -957,7 +1039,8 @@
     (let ((map (make-sparse-keymap)))
       (define-key map (kbd "j") #'corfu-next)
       (define-key map (kbd "k") #'corfu-previous)
-      (define-key map (kbd "SPC") #'(lambda () "insert-, space" (interactive) (insert ", ")))
+      (define-key map (kbd "n") #'corfu-next)
+      (define-key map (kbd "p") #'corfu-previous)
       map))
 
   (dolist (cmd '(corfu-next corfu-previous))
@@ -975,8 +1058,7 @@
      :init
      (global-corfu-mode)
      :bind
-     (:map corfu-map ("C-j" . corfu-next)
-           ("," . corfu-next)))
+     (:map corfu-map ("C-j" . corfu-next)))
 
   (use-package emacs
     :elpaca nil
