@@ -8,20 +8,13 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-(recentf-mode 1)
-
-(repeat-mode)
-
-(setq-default isearch-yank-on-move t)
-(setq-default set-mark-command-repeat-pop t)
-
 ;;elpaca
-(setq package-enable-at-startup nil)
+;; (setq package-enable-at-startup nil)
 ;;end
 
 (menu-bar-mode -1)
 
-(setq doc-view-continuous t)
+
 
 
 (tab-bar-mode -1)
