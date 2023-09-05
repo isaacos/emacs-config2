@@ -1,0 +1,216 @@
+* appearance
+#+BEGIN_SRC emacs-lisp
+           (use-package rainbow-delimiters
+            ;;:elpaca t
+           :ensure t
+           :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+
+* Javascript/Typescript
+- TODO look into auto importing for JS
+  - [[eww: https://github.com/KarimAziev/js-imports][JS imports]]
+  - Switching to lsp-mode with lsp-completion-enable-additional-text-edit
+  - adding a jsconfig to the project
+- TODO linting issue
+  - [[eww:http://mitchgordon.me/software/2021/06/28/why-vscode-eslint-fast.html][flycheck-mode article]]
+
+#+BEGIN_SRC emacs-lisp
+  (with-eval-after-load 'js-mode
+    (use-package js2-mode
+      ;;:elpaca t
+      :defer t
+      :ensure t)
+
+  (use-package prettier-js
+    ;;:elpaca t
+    :ensure t
+    :after (rjsx-mode)
+    :hook (rjxs . prettier-js-mode))
+
+    (add-hook 'js-mode-hook 'prettier-js-mode)
+    (add-hook 'web-mode-hook 'prettier-js-mode)
+  (add-hook 'rjxs-mode 'prettier-js-mode)
+
+    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+    ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+    ;; (add-hook 'js-mode-hook 'js2-minor-mode)
+
+    ;; (use-package js-mode
+
+    ;;   :init
+    ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+    ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+
+    (use-package rjsx-mode
+      ;;:elpaca t
+      :defer t
+      :ensure t)
+
+  (use-package web-mode
+    ;;:elpaca t
+    :ensure t
+    :after (rjsx-mode js2-mode))
+
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+
+  ;; (defun setup-tide-mode ()
+  ;;   "Sets up tide"
+  ;;   (interactive)
+  ;;   (tide-setup)
+  ;;   (flycheck-mode +1)
+  ;;   (tide-hl-identifier-mode +1))
+
+  (use-package tide
+    ;;:elpaca t
+    :ensure t
+    :after (rjsx-mode corfu-mode flycheck)
+    :hook (rjsx-mode . setup-tide-mode))
+)
+  ;;   (with-eval-after-load 'js-mode
+  ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+  ;;            (setq completion-category-defaults nil))
+
+#+END_SRC
+
+* Ansible
+#+BEGIN_SRC emacs-lisp
+  (use-package ansible
+    ;;:elpaca t
+    :mode (("\\.yml\\'" . ansible)))
+#+END_SRC
+* LSP
+#+BEGIN_SRC emacs-lisp
+            (use-package eglot
+              ;;:elpaca t
+              :defer t
+                  :ensure t
+                  :commands (eglot eglot-ensure)
+                  :config
+                  (define-key eglot-mode-map (kbd "M-.") #'xref-find-definitions)
+                  :hook ((clojure-mode . eglot-ensure)
+                         ;;(js-mode . eglot-ensure)
+                         ))
+            ;; Option 1: Specify explicitly to use Orderless for Eglot
+
+              (setq completion-category-overrides '((eglot (styles orderless))))
+
+              (use-package consult-eglot
+                ;;:elpaca t
+                :after (eglot)
+                :ensure t)
+
+  (use-package tree-sitter
+    ;;:elpaca t
+    :defer t
+    :init
+    (global-tree-sitter-mode))
+
+  (use-package tree-sitter-langs
+    ;;:elpaca t
+    :after (tree-sitter))
+
+    (add-hook 'js-mode-hook #'tree-sitter-hl-mode)
+
+      (use-package lsp-mode
+        ;;:elpaca t
+        :commands lsp
+        :hook ((
+                web-mode
+                rjsx-mode
+                ;; javascript-ts-mode
+                ;; typescript-ts-mode
+                ;; jsx-ts-mode
+                ;; tsx-ts-mode
+                )
+               . lsp-deferred)
+        (lsp-completion-mode . my/lsp-mode-setup-completion)
+        (lsp-mode . lsp-enable-which-key-integration)
+        :config
+        (setq lsp-idle-delay 0.1
+              lsp-log-io nil
+              lsp-completion-provider :none
+              lsp-headerline-breadcrumb-enable nil
+              lsp-solargraph-use-bundler 't)
+        :init
+        (defun my/orderless-dispatch-flex-first (_pattern index _total)
+          (and (eq index 0) 'orderless-flex))
+
+        (defun my/lsp-mode-setup-completion ()
+          (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                '(orderless)))
+
+  ;;specific for JavaScript and requires VSCode
+  (setq lsp-eslint-server-command 
+     '("node" 
+       "/home/isaac/.vscode-oss/extensions/dbaeumer.vscode-eslint-2.4.0/server/out/eslintServer.js" 
+       "--stdio"))
+
+        ;; Optionally configure the first word as flex filtered.
+        (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+        ;; Optionally configure the cape-capf-buster.
+        (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+        (setq lsp-keymap-prefix "C-l"))
+
+
+        (add-hook 'lua-mode-hook #'tree-sitter-hl-mode)
+        (add-hook 'sh-mode-hook #'tree-sitter-hl-mode)
+
+#+END_SRC
+* Clojure
+#+BEGIN_SRC emacs-lisp
+  (use-package clojure-mode
+    ;;:elpaca t
+
+    :ensure t
+    :mode (("\\.clj\\'" . clojure-mode)
+           ("\\.edn\\'" . clojure-mode))
+    :init
+    ;; (add-hook 'clojure-mode-hook #'yas-minor-mode)
+    ;; (add-hook 'clojure-mode-hook #'subword-mode)
+    ;; (add-hook 'clojure-mode-hook #'eldoc-mode)
+    )
+
+  (use-package cider
+    ;;:elpaca t
+  ;;   :straight (:type git :host github :repo "clojure-emacs/cider")
+    :ensure t
+    ;;:defer t
+    :after (clojure-mode)
+
+    :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+    :diminish subword-mode
+    :config
+      (setq nrepl-log-messages t
+          cider-repl-display-in-current-window t
+          cider-repl-use-clojure-font-lock t
+          cider-prompt-save-file-on-load 'always-save
+          cider-font-lock-dynamically '(macro core function var)
+          nrepl-hide-special-buffers t
+          cider-overlays-use-font-lock t)
+    (cider-repl-toggle-pretty-printing))
+#+END_SRC
+
+* Common Lisp
+#+BEGIN_SRC emacs-lisp
+  (use-package sly
+    ;;:elpaca t
+    :mode (("\\.lisp\\'" . sly)))
+
+#+END_SRC
+
+* Lua
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode
+    ;;:elpaca t
+
+    :mode (("\\.lua\\'" . lua-mode)))
+#+END_SRC
+
+* C
+#+BEGIN_SRC emacs-lisp
+  (use-package cc-mode
+    ;;:elpaca t
+
+    :mode (("\\.c\\'" . cc-mode)))
+#+END_SRC
