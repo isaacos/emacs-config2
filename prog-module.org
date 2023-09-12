@@ -21,15 +21,15 @@
       :defer t
       :ensure t)
 
-  (use-package prettier-js
-    ;;:elpaca t
-    :ensure t
-    :after (rjsx-mode)
-    :hook (rjxs . prettier-js-mode))
+    (use-package prettier-js
+      ;;:elpaca t
+      :ensure t
+      :after (rjsx-mode)
+      :hook (rjxs . prettier-js-mode))
 
     (add-hook 'js-mode-hook 'prettier-js-mode)
     (add-hook 'web-mode-hook 'prettier-js-mode)
-  (add-hook 'rjxs-mode 'prettier-js-mode)
+    (add-hook 'rjxs-mode 'prettier-js-mode)
 
     ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
     ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
@@ -46,26 +46,27 @@
       :defer t
       :ensure t)
 
-  (use-package web-mode
-    ;;:elpaca t
-    :ensure t
-    :after (rjsx-mode js2-mode))
+    (use-package web-mode
+      ;;:elpaca t
+      :ensure t
+      :after (rjsx-mode js2-mode))
 
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
 
-  ;; (defun setup-tide-mode ()
-  ;;   "Sets up tide"
-  ;;   (interactive)
-  ;;   (tide-setup)
-  ;;   (flycheck-mode +1)
-  ;;   (tide-hl-identifier-mode +1))
+    ;; (defun setup-tide-mode ()
+    ;;   "Sets up tide"
+    ;;   (interactive)
+    ;;   (tide-setup)
+    ;;   (flycheck-mode +1)
+    ;;   (tide-hl-identifier-mode +1))
 
-  (use-package tide
-    ;;:elpaca t
-    :ensure t
-    :after (rjsx-mode corfu-mode flycheck)
-    :hook (rjsx-mode . setup-tide-mode))
-)
+    (use-package tide
+      ;;:elpaca t
+      :ensure t
+      :after (rjsx-mode corfu-mode flycheck js-mode)
+      :hook ((rjsx-mode . setup-tide-mode)
+             (javascript-mode . setup-tide-mode)))
+    )
   ;;   (with-eval-after-load 'js-mode
   ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
   ;;            (setq completion-category-defaults nil))
@@ -117,6 +118,8 @@
         :hook ((
                 web-mode
                 rjsx-mode
+                javascript-mode
+                js-mode
                 ;; javascript-ts-mode
                 ;; typescript-ts-mode
                 ;; jsx-ts-mode
@@ -127,6 +130,8 @@
         (lsp-mode . lsp-enable-which-key-integration)
         :config
         (setq lsp-idle-delay 0.1
+              read-process-output-max (* 1024 1024)
+              lsp-session-file (expand-file-name "tmp/.lsp-session-v1" user-emacs-directory)
               lsp-log-io nil
               lsp-completion-provider :none
               lsp-headerline-breadcrumb-enable nil
