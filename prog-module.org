@@ -82,7 +82,7 @@
         (define-key map (kbd "n") #'company-select-next)
         (define-key map (kbd "p") #'company-select-previous)
         map))
-    (dolist (cmd '(company-select-next 'company-select-previous))
+    (dolist (cmd '(company-select-next company-select-previous))
       (put cmd 'repeat-map 'company-repeat-map)))
   ;;   (with-eval-after-load 'js-mode
   ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
@@ -236,4 +236,3 @@
 
     :mode (("\\.c\\'" . cc-mode)))
 #+END_SRC
-
