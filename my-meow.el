@@ -25,6 +25,7 @@
      '("bt" .  kill-this-buffer)
      '("bm" .  switch-to-minibuffer)
 
+     '("g s" . magit-status)
 
      '("p" . "C-x p") ;;project prefix map
 
@@ -105,6 +106,7 @@
      '("w" . meow-save)
      ;;'("W" . meow-next-symbol)
      ;; '("x" . meow-delete)
+     '("x t" . meow-transpose-sexp)
      ;; '("X" . meow-backward-delete)
      '("x e" . meow-beginning-of-thing)
      '("x n" . meow-end-of-thing)
@@ -130,14 +132,14 @@
 
     (setq meow-cursor-type-insert 'box)
     (setq meow-keypad-start-keys '((?i . ?c) ;;breaks naming convention but frees c in leader
-                                   (?h . ?h)
+                                   ;; (?h . ?h) ;;removed inorder to rebind h to C-M-
                                    (?t . ?x))) ;; easier to access than x
     (setq meow-origami-keymap (make-keymap))
     (meow-define-state origami
       "meow state for interacting with smartparens"
       :lighter " [O]"
       :keymap meow-origami-keymap)
-
+(setq meow-keypad-ctrl-meta-prefix ?h)
     ;; meow-define-state creates the variable
     (setq meow-cursor-type-origami 'hollow)
     (setq meow-cursor-type-beacon '(box))
@@ -175,3 +177,4 @@
             (meow-motion-mode-p))
         (call-interactively #'kmacro-end-or-call-macro))
        )))
+
