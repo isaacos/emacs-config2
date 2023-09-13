@@ -15,79 +15,91 @@
   - [[eww:http://mitchgordon.me/software/2021/06/28/why-vscode-eslint-fast.html][flycheck-mode article]]
 
 #+BEGIN_SRC emacs-lisp
-  (with-eval-after-load 'js-mode
-    (use-package js2-mode
-      ;;:elpaca t
-      :defer t
-      :ensure t)
+    (with-eval-after-load 'js-mode
+      (use-package js2-mode
+        ;;:elpaca t
+        :defer t
+        :ensure t)
 
-    (use-package prettier-js
-      ;;:elpaca t
-      :ensure t
-      :after (rjsx-mode)
-      :hook (rjxs . prettier-js-mode))
+      (use-package prettier-js
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode)
+        :hook ((rjxs . prettier-js-mode)
+               (prettier-js-mode . super-save-mode)))
 
-    (add-hook 'js-mode-hook 'prettier-js-mode)
-    (add-hook 'web-mode-hook 'prettier-js-mode)
-    ;; (add-hook 'rjxs-mode 'prettier-js-mode)
+      (add-hook 'js-mode-hook 'prettier-js-mode)
+      (add-hook 'web-mode-hook 'prettier-js-mode)
+      ;; (add-hook 'rjxs-mode 'prettier-js-mode)
 
-    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
-    ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
-    ;; (add-hook 'js-mode-hook 'js2-minor-mode)
+      ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+      ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+      ;; (add-hook 'js-mode-hook 'js2-minor-mode)
 
-    ;; (use-package js-mode
+      ;; (use-package js-mode
 
-    ;;   :init
-    ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
-    ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+      ;;   :init
+      ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+      ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
 
-    (use-package rjsx-mode
-      ;;:elpaca t
-      :defer t
-      :ensure t)
+      (use-package rjsx-mode
+        ;;:elpaca t
+        :defer t
+        :ensure t)
 
-    (use-package web-mode
-      ;;:elpaca t
-      :ensure t
-      :after (rjsx-mode js2-mode))
+      (use-package web-mode
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode js2-mode))
 
-    ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+      ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
 
-    (defun setup-tide-mode ()
-      "Sets up tide"
-      (interactive)
-      ;; (tide-setup)
-      (flycheck-mode +1)
-  (company-mode 1)
-  (corfu-mode -1)
-  (super-save-mode -1)
-  (prettier-js-mode 1)
-      (tide-hl-identifier-mode +1))
+      (defun setup-tide-mode ()
+        "Sets up tide"
+        (interactive)
+        ;; (tide-setup)
+        (flycheck-mode +1)
+    (company-mode 1)
+    (corfu-mode -1)
+    (super-save-mode -1)
+    (prettier-js-mode 1)
+        (tide-hl-identifier-mode +1))
 
-    (use-package tide
-      ;;:elpaca t
-      :ensure t
-      :after (rjsx-mode corfu-mode flycheck js-mode)
-      :hook ((rjsx-mode . setup-tide-mode)
-             (javascript-mode . setup-tide-mode))))
+      (use-package tide
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode corfu-mode flycheck js-mode)
+        :hook ((rjsx-mode . setup-tide-mode)
+               (javascript-mode . setup-tide-mode))))
 
-  (use-package typescript-mode
-    :hook (typescript-mode . setup-tide-mode))
+(use-package typescript-mode
+  :mode (("\\.ts\\'" . typescript-mode)
+         ("\\.tsx\\'" . typescript-mode))
 
-  (use-package company
-    :config
-    (define-key company-active-map (kbd "C-n") #'company-select-next)
-    (defvar company-repeat-map
-      (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "n") #'company-select-next)
-        (define-key map (kbd "p") #'company-select-previous)
-        map))
-    (dolist (cmd '(company-select-next company-select-previous))
-      (put cmd 'repeat-map 'company-repeat-map)))
-  ;;   (with-eval-after-load 'js-mode
-  ;;     '(define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
-  ;;            (setq completion-category-defaults nil))
+      :hook (typescript-mode . setup-tide-mode)
+      :config
+      (defun setup-tide-mode ()
+        "Sets up tide"
+        (interactive)
+        ;; (tide-setup)
+        (flycheck-mode +1)
+    (company-mode 1)
+    (corfu-mode -1)
+    (super-save-mode -1)
+    (prettier-js-mode 1)
+        ))
 
+(use-package company
+  :hook (company-mode . corfu-mode)
+      :config
+      (define-key company-active-map (kbd "C-n") #'company-select-next)
+      (defvar company-repeat-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "n") #'company-select-next)
+          (define-key map (kbd "p") #'company-select-previous)
+          map))
+      (dolist (cmd '(company-select-next company-select-previous))
+        (put cmd 'repeat-map 'company-repeat-map)))
 #+END_SRC
 
 * Ansible
@@ -236,3 +248,4 @@
 
     :mode (("\\.c\\'" . cc-mode)))
 #+END_SRC
+
