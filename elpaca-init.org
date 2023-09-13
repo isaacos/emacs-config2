@@ -310,8 +310,10 @@
 
   (use-package puni
     ;;:elpaca t
-    :bind (("C-<" . puni-barf-forward)
-           ("C->" . puni-slurp-forward)))
+    :bind (("C-{" . puni-barf-backward)
+           ("C-}" . puni-barf-forward)
+           ("C-(" . puni-slurp-backward)
+           ("C-)" . puni-slurp-forward)))
 
   (use-package hydra
     ;;:elpaca t
