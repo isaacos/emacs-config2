@@ -74,11 +74,13 @@
     ;;:elpaca t
     :ensure t
     :commands (crux-sudo-edit
-              crux-cleanup-buffer-or-region
-              crux-smart-open-line)
+               crux-cleanup-buffer-or-region
+               crux-smart-open-line)
 
     :bind (("C-a" . crux-move-beginning-of-line)
            ("C-o" . crux-smart-open-line)
+           ("C-c b s" . crux-sudo-edit)
+           ("C-c b c" . crux-cleanup-buffer-or-region)
            ("C-S-o" . crux-smart-open-line-above)
            ("M-o" . crux-other-window-or-switch-buffer)))
 
@@ -128,7 +130,8 @@
 
   (use-package origami
     :ensure t
-    :bind(("C-c o a" . origami-close-all-nodes)))
+    :bind(;; ("C-c o a" . origami-close-all-nodes)
+          ))
 
 
 #+END_SRC
@@ -236,9 +239,6 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
   ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-god-mode-config.el"))
-  (use-package eshell
-    :bind (("C-x m" . eshell)))
-  ;;(global-set-key (kbd "C-x m") #'eshell)
 
   (use-package which-key
     ;;:elpaca t
@@ -295,7 +295,7 @@
     ;;:defer 1
     ;;:after (avy)
     :ensure t
-    :bind (("C-x o" . ace-window))
+    :bind (("C-c w a" . ace-window))
     :config
     ;;customize to make face more visible
 
@@ -310,6 +310,7 @@
 
   (use-package puni
     ;;:elpaca t
+    :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square)
     :bind (("C-{" . puni-barf-backward)
            ("C-}" . puni-barf-forward)
            ("C-(" . puni-slurp-backward)
@@ -357,12 +358,12 @@
   :bind (("C-c w /" . winner-undo)
          ("C-c w _" . winner-redo)))
 
-(use-package super-save
-  ;;:elpaca t
-  :defer 2
-  :ensure t
-  :config
-  (super-save-mode +1))
+;; (use-package super-save
+;;   ;;:elpaca t
+;;   :defer 2
+;;   :ensure t
+;;   :config
+;;   (super-save-mode +1))
 
 (use-package vterm
   ;;:elpaca t
@@ -423,7 +424,128 @@
    ("j" . dired-next-line)
    ("k" . dired-previous-line)))
 #+END_SRC
+* eshell
+#+BEGIN_SRC emacs-lisp
+  ;;largely taken from system crafters but modified to my tasts
+  (defun read-file (file-path)
+    (with-temp-buffer
+      (insert-file-contents file-path)
+      (buffer-string)))
 
+  (defun dw/get-current-package-version ()
+    (interactive)
+    (let ((package-json-file (concat (eshell/pwd) "/package.json")))
+      (when (file-exists-p package-json-file)
+        (let* ((package-json-contents (read-file package-json-file))
+               (package-json (ignore-errors (json-parse-string package-json-contents))))
+          (when package-json
+            (ignore-errors (gethash "version" package-json)))))))
+
+  (defun dw/map-line-to-status-char (line)
+    (cond ((string-match "^?\\? " line) "?")))
+
+  (defun dw/get-git-status-prompt ()
+    (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
+      (seq-uniq (seq-filter 'identity (mapcar 'dw/map-line-to-status-char status-lines)))))
+
+  (defun dw/get-prompt-path ()
+    (let* ((current-path (eshell/pwd))
+           (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
+           (has-path (not (string-match "^fatal" git-output))))
+      (if (not has-path)
+          (abbreviate-file-name current-path)
+        (string-remove-prefix (file-name-directory git-output) current-path))))
+
+  ;; This prompt function mostly replicates my custom zsh prompt setup
+  ;; that is powered by github.com/denysdovhan/spaceship-prompt.
+  (defun dw/eshell-prompt ()
+    (let ((current-branch (magit-get-current-branch))
+          (package-version (dw/get-current-package-version)))
+      (concat
+       "\n"
+       (propertize (system-name) 'face `(:foreground "#87af87"))
+       (propertize "  " 'face `(:foreground "#d3a0bc"))
+       (propertize (dw/get-prompt-path) 'face `(:foreground "#e39b7b"))
+       (when current-branch
+         (concat
+          (propertize " • " 'face `(:foreground "#d3a0bc"))
+          (propertize (concat " " current-branch) 'face `(:foreground "#e68183"))))
+       (when package-version
+         (concat
+          (propertize " @ " 'face `(:foreground "#d3a0bc"))
+          (propertize package-version 'face `(:foreground "#e8a206"))))
+       (propertize " • " 'face `(:foreground "#d3a0bc"))
+       (propertize (format-time-string "%I:%M:%S %p") 'face `(:foreground "#5b5b5b"))
+       (if (= (user-uid) 0)
+           (propertize "\n#" 'face `(:foreground "red2"))
+         (propertize "\nλ" 'face `(:foreground "#89beba")))
+       (propertize " " 'face `(:foreground "#d9bb80")))))
+
+
+
+  (defun dw/eshell-configure ()
+
+    (use-package xterm-color)
+
+    (push 'eshell-tramp eshell-modules-list)
+    (push 'xterm-color-filter eshell-preoutput-filter-functions)
+    (delq 'eshell-handle-ansi-color eshell-output-filter-functions)
+
+    ;; Save command history when commands are entered
+    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+    (add-hook 'eshell-before-prompt-hook
+              (lambda ()
+                (setq xterm-color-preserve-properties t)))
+
+    ;; Truncate buffer for performance
+    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+    ;; We want to use xterm-256color when running interactive commands
+    ;; in eshell but not during other times when we might be launching
+    ;; a shell command to gather its output.
+    (add-hook 'eshell-pre-command-hook
+              (lambda () (setenv "TERM" "xterm-256color")))
+    (add-hook 'eshell-post-command-hook
+              (lambda () (setenv "TERM" "dumb")))
+
+    ;; Use completion-at-point to provide completions in eshell
+    (define-key eshell-mode-map (kbd "<tab>") 'completion-at-point)
+
+    ;; Initialize the shell history
+    (eshell-hist-initialize)
+
+
+    (setenv "PAGER" "cat")
+
+    (setq eshell-prompt-function      'dw/eshell-prompt
+          eshell-prompt-regexp        "^λ "
+          eshell-history-size         10000
+          eshell-buffer-maximum-lines 10000
+          eshell-hist-ignoredups t
+          eshell-highlight-prompt t
+          eshell-scroll-to-bottom-on-input t
+          eshell-prefer-lisp-functions nil))
+
+(use-package eshell
+  :bind (("C-c o s" . eshell))
+  :hook (eshell-first-time-mode . dw/eshell-configure)
+  :init
+  (setq eshell-directory-name "~/.dotfiles/.emacs.d/eshell/"))
+
+(use-package eshell-z
+  :after (eshell)
+  :hook ((eshell-mode . (lambda () (require 'eshell-z)))
+         (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
+
+(use-package exec-path-from-shell
+  :after (eshell)
+  :init
+  (setq exec-path-from-shell-check-startup-files nil)
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+#+END_SRC
 * projects
 #+BEGIN_SRC emacs-lisp
 ;; (use-package projectile
@@ -437,7 +559,10 @@
 (use-package magit
   ;;:elpaca t
   :ensure t
-  ;;:defer 2
+  :defer 2
+  :bind (("C-c g g" . magit-status)
+         ("C-c g b" . magit-branch-checkout)
+         ("C-c g c" . magit-branch-and-checkout))
   :commands (magit-status magit-get-current-branch)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
@@ -452,104 +577,109 @@
 
 * emacs completion frameworks
 #+BEGIN_SRC emacs-lisp
-  (defun dw/minibuffer-backward-kill (arg)
-    "When minibuffer is completing a file name delete up to parent
+(defun dw/minibuffer-backward-kill (arg)
+  "When minibuffer is completing a file name delete up to parent
                   folder, otherwise delete a word"
-    (interactive "p")
-    (if minibuffer-completing-file-name
-        ;; Borrowed from/modified https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
-        (if (string-match-p "./" (minibuffer-contents))
+  (interactive "p")
+  (if minibuffer-completing-file-name
+      ;; Borrowed from/modified https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+      (if (string-match-p "./" (minibuffer-contents))
           (progn
             (zap-up-to-char (- arg) ?/)
             (pop kill-ring))
-          (delete-minibuffer-contents))
-      (delete-backward-char arg)))
+        (delete-minibuffer-contents))
+    (delete-backward-char arg)))
 
-  (use-package vertico
-    ;;:elpaca t
-    :defer 1
-    :ensure t
-    :bind (:map minibuffer-local-map
-                ("DEL" . dw/minibuffer-backward-kill)
-                :map vertico-map
-                ("C-'" . vertico-quick-jump))
-    ;;:hook ((find-file . vertico-mode))
-    :commands (find-file switch-to-buffer)
-    :custom
-    (vertico-cycle t)
-    :init
-    (vertico-mode)
-    :config
-    (setq vertico-quick1 "neiorst")
-    (setq vertico-quick2 "neio")
-    (defvar vertico-repeat-map
-      (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "n") #'vertico-next)
-        (define-key map (kbd "p") #'vertico-previous)
-        (define-key map (kbd "SPC") #'vertico-insert)
+(use-package vertico
+  ;;:elpaca t
+  :defer 1
+  :ensure t
+  :bind (:map minibuffer-local-map
+              ("DEL" . dw/minibuffer-backward-kill)
+              :map vertico-map
+              ("C-'" . vertico-quick-jump))
+  ;;:hook ((find-file . vertico-mode))
+  :commands (find-file switch-to-buffer)
+  :custom
+  (vertico-cycle t)
+  :init
+  (vertico-mode)
+  :config
+  (setq vertico-quick1 "neiorst")
+  (setq vertico-quick2 "neio")
+  (defvar vertico-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "n") #'vertico-next)
+      (define-key map (kbd "p") #'vertico-previous)
+      (define-key map (kbd "SPC") #'vertico-insert)
 
-        map))
-    (dolist (cmd '(vertico-next vertico-previous))
-      (put cmd 'repeat-map 'vertico-repeat-map)))
+      map))
+  (dolist (cmd '(vertico-next vertico-previous))
+    (put cmd 'repeat-map 'vertico-repeat-map)))
 
-  (use-package orderless
-    ;;:elpaca t
-    :ensure t
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-overrides '((file (styles basic partial-completion)))))
+(use-package orderless
+  ;;:elpaca t
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
 
-  (defun dw/get-project-root ()
-    (when (fboundp 'projectile-project-root)
-      (projectile-project-root)))
+(defun dw/get-project-root ()
+  (when (fboundp 'projectile-project-root)
+    (projectile-project-root)))
 
-  (setq completion-ignore-case  t)
+(setq completion-ignore-case  t)
 
-  (setq read-file-name-completion-ignore-case t
-        read-buffer-completion-ignore-case t
-        completion-ignore-case t)
+(setq read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      completion-ignore-case t)
 
-  (use-package marginalia
-    ;;:elpaca t
-    :after (vertico)
-    :ensure t
-    :config
-    (marginalia-mode))
+(use-package marginalia
+  ;;:elpaca t
+  :after (vertico)
+  :ensure t
+  :config
+  (marginalia-mode))
 
 
 
-  (use-package embark
-    ;;:elpaca t
-    :ensure t
-    :bind
-    (("C-," . embark-act)         ;; pick some comfortable binding
-     ("C-;" . embark-dwim)        ;; good alternative: M-.
-     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-    ;;:init
+(use-package embark
+  ;;:elpaca t
+  :ensure t
+  :bind
+  (("C-," . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-c ." . embark-dwim)        ;; good alternative: M-.
 
-    ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
-    :config
-    ;; Hide the mode line of the Embark live/completions buffers
-    ;; Optionally replace the key help with a completing-read interface
-    (setq prefix-help-command #'embark-prefix-help-command)
-    ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
-    ;; strategy, if you want to see the documentation from multiple providers.
-    (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
-    (setq embark-cycle-key (kbd ","))
-    (add-to-list 'display-buffer-alist
-                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                   nil
-                   (window-parameters (mode-line-format . none)))))
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  ;;:init
 
-  ;; Consult users will also want the embark-consult package.
-  (use-package embark-consult
-    ;;:elpaca t
-    :after (embark)
-    :ensure t ; only need to install it, embark loads it after consult if found
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode))
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  (setq embark-cycle-key (kbd ","))
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  ;;:elpaca t
+  :after (embark)
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 #+END_SRC
+
+#+RESULTS:
+| consult-preview-at-point-mode | embark-consult--upgrade-markers |
 
 * searching
 #+BEGIN_SRC emacs-lisp
@@ -558,6 +688,7 @@
   ;;:defer 1
   :bind (([remap imenu] . consult-imenu)
          ("C-c s" . consult-line)
+         ("C-c B" . consult-buffer)
          :map isearch-mode-map
          ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
          ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
@@ -628,12 +759,6 @@
   (setq fennel-program "~/.luarocks/bin/fennel --repl"))
 #+END_SRC
 
-
-* Prog modes
-#+BEGIN_SRC emacs-lisp
-(eval-after-load 'prog-mode
-  (org-babel-load-file (expand-file-name "~/.emacs.d/prog-module.org")))
-#+END_SRC
 * autocomplete
 #+BEGIN_SRC emacs-lisp
   (use-package cape
@@ -841,8 +966,6 @@
 (use-package ps-mode
   :mode (("\\.ps\\'" . ps-mode)))
 
-(use-package python
-  :mode (("\\.py\\'" . python-mode)))
 
 (use-package ruby-mode
   :mode (("\\.rb\\'" . ruby-mode)))
@@ -850,4 +973,282 @@
 (use-package verilog-mode
   :mode (("\\.vh\\'" . verilog-mode)
          ("\\.vlg\\'" . verilog-mode)))
+#+END_SRC
+
+
+* appearance
+#+BEGIN_SRC emacs-lisp
+           (use-package rainbow-delimiters
+            ;;:elpaca t
+           :ensure t
+           :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+* Env
+#+BEGIN_SRC emacs-lisp
+(setenv "PATH" (concat (getenv "PATH") "~/.local/bin"))
+(setq exec-path (append exec-path '("~/.local/bin")))
+#+END_SRC
+
+* appearance
+#+BEGIN_SRC emacs-lisp
+           (use-package rainbow-delimiters
+            ;;:elpaca t
+           :ensure t
+           :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+
+* Javascript/Typescript
+- TODO look into auto importing for JS
+  - [[eww: https://github.com/KarimAziev/js-imports][JS imports]]
+  - Switching to lsp-mode with lsp-completion-enable-additional-text-edit
+  - adding a jsconfig to the project
+- TODO linting issue
+  - [[eww:http://mitchgordon.me/software/2021/06/28/why-vscode-eslint-fast.html][flycheck-mode article]]
+
+#+BEGIN_SRC emacs-lisp
+    (with-eval-after-load 'js-mode
+      (use-package js2-mode
+        ;;:elpaca t
+        :defer t
+        :ensure t)
+
+      (use-package prettier-js
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode)
+        :hook ((rjxs . prettier-js-mode)
+               (prettier-js-mode . super-save-mode)))
+
+      (add-hook 'js-mode-hook 'prettier-js-mode)
+      (add-hook 'web-mode-hook 'prettier-js-mode)
+      ;; (add-hook 'rjxs-mode 'prettier-js-mode)
+
+      ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+      ;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+      ;; (add-hook 'js-mode-hook 'js2-minor-mode)
+
+      ;; (use-package js-mode
+
+      ;;   :init
+      ;;   (define-key js-mode-map (kbd "C-k") #'xah-backward-left-bracket)
+      ;;   (define-key js-mode-map (kbd "C-j") #'forward-left-bracket))
+
+      (use-package rjsx-mode
+        ;;:elpaca t
+        :defer t
+        :ensure t)
+
+      (use-package web-mode
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode js2-mode))
+
+      ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+
+      (defun setup-tide-mode ()
+        "Sets up tide"
+        (interactive)
+        ;; (tide-setup)
+        (flycheck-mode +1)
+    (company-mode 1)
+    (corfu-mode -1)
+    (super-save-mode -1)
+    (prettier-js-mode 1)
+        (tide-hl-identifier-mode +1))
+
+      (use-package tide
+        ;;:elpaca t
+        :ensure t
+        :after (rjsx-mode corfu-mode flycheck js-mode)
+        :hook ((rjsx-mode . setup-tide-mode)
+               (javascript-mode . setup-tide-mode))))
+
+(use-package typescript-mode
+  :mode (("\\.ts\\'" . typescript-mode)
+         ("\\.tsx\\'" . typescript-mode))
+
+      :hook (typescript-mode . setup-tide-mode)
+      :config
+      (defun setup-tide-mode ()
+        "Sets up tide"
+        (interactive)
+        ;; (tide-setup)
+        (flycheck-mode +1)
+    (company-mode 1)
+    (corfu-mode -1)
+    (super-save-mode -1)
+    (prettier-js-mode 1)
+        ))
+
+;; (use-package company
+;;   :hook (company-mode . corfu-mode)
+;;       :config
+;;       (define-key company-active-map (kbd "C-n") #'company-select-next)
+;;       (defvar company-repeat-map
+;;         (let ((map (make-sparse-keymap)))
+;;           (define-key map (kbd "n") #'company-select-next)
+;;           (define-key map (kbd "p") #'company-select-previous)
+;;           map))
+;;       (dolist (cmd '(company-select-next company-select-previous))
+;;         (put cmd 'repeat-map 'company-repeat-map)))
+#+END_SRC
+
+* Ansible
+#+BEGIN_SRC emacs-lisp
+  (use-package ansible
+    ;;:elpaca t
+    :mode (("\\.yml\\'" . ansible)))
+#+END_SRC
+* LSP
+#+BEGIN_SRC emacs-lisp
+            (use-package eglot
+              ;;:elpaca t
+              :defer t
+                  :ensure t
+                  :commands (eglot eglot-ensure)
+                  :config
+                  (define-key eglot-mode-map (kbd "M-.") #'xref-find-definitions)
+                  :hook ((clojure-mode . eglot-ensure)
+                         ;;(js-mode . eglot-ensure)
+                         ))
+            ;; Option 1: Specify explicitly to use Orderless for Eglot
+
+              (setq completion-category-overrides '((eglot (styles orderless))))
+
+              (use-package consult-eglot
+                ;;:elpaca t
+                :after (eglot)
+                :ensure t)
+
+  (use-package tree-sitter
+    ;;:elpaca t
+    :init
+    (global-tree-sitter-mode))
+
+  (use-package tree-sitter-langs
+    ;;:elpaca t
+    :after (tree-sitter))
+
+    (add-hook 'js-mode-hook #'tree-sitter-hl-mode)
+
+      (use-package lsp-mode
+        ;;:elpaca t
+        :commands lsp
+        :hook ((
+                web-mode
+                rjsx-mode
+                javascript-mode
+                js-mode
+                python-mode
+                ;; javascript-ts-mode
+                ;; typescript-ts-mode
+                ;; jsx-ts-mode
+                ;; tsx-ts-mode
+                )
+               . lsp-deferred)
+        (lsp-completion-mode . my/lsp-mode-setup-completion)
+        (lsp-mode . lsp-enable-which-key-integration)
+        :config
+        (setq lsp-idle-delay 0.1
+              read-process-output-max (* 1024 1024)
+              lsp-session-file (expand-file-name "tmp/.lsp-session-v1" user-emacs-directory)
+              lsp-log-io nil
+              lsp-completion-provider :none
+              lsp-headerline-breadcrumb-enable nil
+              lsp-solargraph-use-bundler 't)
+        :init
+        (defun my/orderless-dispatch-flex-first (_pattern index _total)
+          (and (eq index 0) 'orderless-flex))
+
+        (defun my/lsp-mode-setup-completion ()
+          (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                '(orderless)))
+
+  ;;specific for JavaScript and requires VSCode
+  (setq lsp-eslint-server-command 
+     '("node" 
+       "/home/isaac/.vscode-oss/extensions/dbaeumer.vscode-eslint-2.4.0/server/out/eslintServer.js" 
+       "--stdio"))
+
+        ;; Optionally configure the first word as flex filtered.
+        (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+        ;; Optionally configure the cape-capf-buster.
+        (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+        (setq lsp-keymap-prefix "C-c l"))
+
+
+        (add-hook 'lua-mode-hook #'tree-sitter-hl-mode)
+        (add-hook 'sh-mode-hook #'tree-sitter-hl-mode)
+
+#+END_SRC
+* Clojure
+#+BEGIN_SRC emacs-lisp
+  (use-package clojure-mode
+    ;;:elpaca t
+
+    :ensure t
+    :mode (("\\.clj\\'" . clojure-mode)
+           ("\\.edn\\'" . clojure-mode))
+    :init
+    ;; (add-hook 'clojure-mode-hook #'yas-minor-mode)
+    ;; (add-hook 'clojure-mode-hook #'subword-mode)
+    ;; (add-hook 'clojure-mode-hook #'eldoc-mode)
+    )
+
+  (use-package cider
+    ;;:elpaca t
+  ;;   :straight (:type git :host github :repo "clojure-emacs/cider")
+    :ensure t
+    ;;:defer t
+    :after (clojure-mode)
+
+    :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+    :diminish subword-mode
+    :config
+      (setq nrepl-log-messages t
+          cider-repl-display-in-current-window t
+          cider-repl-use-clojure-font-lock t
+          cider-prompt-save-file-on-load 'always-save
+          cider-font-lock-dynamically '(macro core function var)
+          nrepl-hide-special-buffers t
+          cider-overlays-use-font-lock t)
+    (cider-repl-toggle-pretty-printing))
+#+END_SRC
+
+* Common Lisp
+#+BEGIN_SRC emacs-lisp
+  (use-package sly
+    ;;:elpaca t
+    :mode (("\\.lisp\\'" . sly)))
+
+#+END_SRC
+
+* Lua
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode
+    ;;:elpaca t
+    :mode (("\\.lua\\'" . lua-mode)))
+#+END_SRC
+
+* C
+#+BEGIN_SRC emacs-lisp
+  (use-package cc-mode
+    ;;:elpaca t
+    :mode (("\\.c\\'" . cc-mode)))
+#+END_SRC
+
+
+* Python
+#+BEGIN_SRC emacs-lisp
+  (use-package python-mode
+    ;;:elpaca t
+
+    :mode (("\\.py\\'" . python-mode)))
+
+  (use-package elpy
+    :defer t
+    :ensure t
+    :init
+    (elpy-enable))
 #+END_SRC
