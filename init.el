@@ -5,6 +5,8 @@
   (global-display-line-numbers-mode))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/")t)
 (add-to-list 'package-archives '("org". "https://orgmode.org/elpa/"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/my/"))
+
 (require 'use-package)
 (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 
@@ -48,7 +50,7 @@
     ;;(global-set-key (kbd "M-m") #'mark-sexp)
     ;;(org-babel-load-file (expand-file-name "~/.emacs.d/my-meow.org"))
    ;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.org"))
-   (org-babel-load-file (expand-file-name "~/.emacs.d/elpaca-init.org"))
+   (org-babel-load-file (expand-file-name "~/.emacs.d/my-init.org"))
     ;;(org-babel-load-file (expand-file-name "~/.emacs.d/ryo-modal.el"))
 
     (message "config was loaded")))
@@ -58,7 +60,7 @@
     (setq cursor-type 'hbar)
     
     (use-package nerd-icons
-      ;;:elpaca t
+      ;; :elpaca t
       :defer t
       :ensure t)
 
@@ -91,20 +93,28 @@
       :ensure t
       :config
       (setq doom-modeline-buffer-encoding nil))
-    (doom-modeline-mode))))
+    
+    (doom-modeline-mode)
+    )))
+
    (org-babel-load-file (expand-file-name "~/.emacs.d/my-meow.el"))
+   ;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.org"))
 
 (run-with-idle-timer 1 nil 'my/load-config)
 ;; (my/load-config)
 
-(setq org-agenda-files '("~/.emacs.d/agenda/tasks.org"))
+(setq org-agenda-files '("~/schedule/tasks.org"
+                         "~/schedule/birthdays.org"))
 
 (setq org-capture-templates
       '(("t" "Tasks / Projects")
-        ("tt" "tasks" entry (file+olp "~/.emacs.d/agenda/tasks.org" "TASKS")
+        ("tt" "tasks" entry (file+olp "~/schedule/tasks.org" "TASKS")
          "* TODO %?\n %U\n %a\n %i" :empty-lines 1)
-        ("tr" "reading" entry (file+olp "~/.emacs.d/agenda/tasks.org" "READING")
-         "* TODO %?\n %U\n %a\n %i" :empty-lines 1)))
+        ("tr" "reading" entry (file+olp "~/schedule/tasks.org" "READING")
+         "* TODO %?\n %U\n %a\n %i" :empty-lines 1))
+      org-agenda-start-with-log-mode t
+      org-log-done 'time
+      org-log-into-drawer t)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -123,7 +133,42 @@
 (put 'set-goal-column 'disabled nil)
 (put 'dired-find-alternate-file 'disabled nil)
 
+(use-package viper
+  :disabled)
 
+(use-package isearchb
+  :disabled)
+
+
+(use-package rect
+  :bind
+  (:map rectangle-mark-mode-map
+        ("t" . string-rectangle)
+        ("o" . open-rectangle)
+        ("c" . clear-rectangle)
+        ("n" . next-line)
+        ("p" . previous-line)
+        ("f" . forward-char)
+        ("b" . backward-char)
+        ("x" . rectangle-exchange-point-and-mark)
+        (" " . delete-whitespace-rectangle)))
+
+(use-package occur
+  :defer t
+  :hook (occur-mode . force-truncate-lines))
+
+
+
+(use-package ps-mode
+  :mode (("\\.ps\\'" . ps-mode)))
+
+
+(use-package ruby-mode
+  :mode (("\\.rb\\'" . ruby-mode)))
+
+(use-package verilog-mode
+  :mode (("\\.vh\\'" . verilog-mode)
+         ("\\.vlg\\'" . verilog-mode)))
 
 (defun efs/display-startup-time ()
   (message "Emacs loaded in %s with %d garbage collections."
@@ -144,8 +189,8 @@
  '(custom-safe-themes
    '("f64189544da6f16bab285747d04a92bd57c7e7813d8c24c30f382f087d460a33" "0c08a5c3c2a72e3ca806a29302ef942335292a80c2934c1123e8c732bb2ddd77" "8d8207a39e18e2cc95ebddf62f841442d36fcba01a2a9451773d4ed30b632443" "56044c5a9cc45b6ec45c0eb28df100d3f0a576f18eef33ff8ff5d32bac2d9700" "636b135e4b7c86ac41375da39ade929e2bd6439de8901f53f88fde7dd5ac3561" "b9761a2e568bee658e0ff723dd620d844172943eb5ec4053e2b199c59e0bcc22" "00cec71d41047ebabeb310a325c365d5bc4b7fab0a681a2a108d32fb161b4006" "5f128efd37c6a87cd4ad8e8b7f2afaba425425524a68133ac0efd87291d05874" "467dc6fdebcf92f4d3e2a2016145ba15841987c71fbe675dcfe34ac47ffb9195" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" "545ab1a535c913c9214fe5b883046f02982c508815612234140240c129682a68" default))
  '(package-selected-packages
-   '(typescript-mode yasnippet-snippets undo-fu-session origami meow dap-mode treesit-auto visual-fill-column nov use-package-chords which-key web-mode vterm vertico use-package undo-tree tree-sitter-langs tide super-save sly rjsx-mode rg rainbow-delimiters puni prettier-js prettier pdf-tools org-bullets orderless nerd-icons marginalia magit lua-mode lsp-mode key-chord hydra fennel-mode embark-consult doom-themes doom-modeline dirvish diff-hl denote crux corfu consult-notes consult-eglot cider cape browse-kill-ring anzu ansible annalist all-the-icons ace-window)))
+   '(origami openwith docker xterm-color exec-path-from-shell eshell-z elpy python-mode consult-lsp typescript-mode yasnippet-snippets undo-fu-session meow dap-mode treesit-auto visual-fill-column nov use-package-chords which-key web-mode vterm vertico use-package undo-tree tree-sitter-langs tide super-save sly rjsx-mode rg rainbow-delimiters puni prettier-js prettier pdf-tools org-bullets orderless nerd-icons marginalia magit lua-mode lsp-mode key-chord hydra fennel-mode embark-consult doom-themes doom-modeline dirvish diff-hl denote crux corfu consult-notes consult-eglot cider cape browse-kill-ring anzu ansible annalist all-the-icons ace-window))
+ '(safe-local-variable-values '((eval message "hello"))))
 (put 'upcase-region 'disabled nil)
 
-
-
+;; (setq initial-buffer-choice "~/.emacs.d/start.org")
