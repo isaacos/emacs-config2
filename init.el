@@ -1,5 +1,10 @@
-(add-to-list 'default-frame-alist '(font . "Dejavu Sans Mono-12"))
 
+(add-to-list 'default-frame-alist '(font . "DejavuSansM Nerd Font Mono-12"))
+
+
+(add-to-list 'default-frame-alist '(alpha-background . 90))
+;; (add-to-list 'default-frame-alist '(font . "Dejavu Sans Mono-12"))
+;; -PfEd-DejaVuSansM Nerd Font Mono-regular-normal-normal-*-*-*-*-*-m-0-iso10646-1
 (require 'package)
 (when (version<= "28.0.50" emacs-version )
   (global-display-line-numbers-mode))
@@ -77,7 +82,7 @@
       (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
             doom-themes-enable-italic t)  ; if nil, italics is universally disabled
       (load-theme 'doom-miramare t)
-
+;; (set-face-background 'font-lock-comment-face (doom-lighten "#e68183" 0.4))
       ;; Enable flashing mode-line on errors
       (doom-themes-visual-bell-config)
       ;; Enable custom neotree theme (all-the-icons must be installed!)
@@ -92,10 +97,12 @@
       ;;:elpaca t
       :ensure t
       :config
+      (setq doom-modeline-position-line-format nil)
       (setq doom-modeline-buffer-encoding nil))
-    
-    (doom-modeline-mode)
-    )))
+    ;; (setq doom-modeline-i)
+(custom-set-faces
+  '(mode-line-inactive ((t (:font "DejavuSansM Nerd Font Mono-10" :box (:line-width 1 :height 0.8))))))
+    (doom-modeline-mode))))
 
    (org-babel-load-file (expand-file-name "~/.emacs.d/my-meow.el"))
    ;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.org"))
@@ -122,6 +129,7 @@
  ;; If there is more than one, they won't work right.
  '(aw-leading-char-face ((t (:foreground "#1f2430" :background "#f28779" :height 3.0))))
  '(easy-kill-origin ((t (:inherit error :background "white smoke" :foreground "red" :inverse-video t))))
+ '(mode-line-inactive ((t (:family "Noto Sans" :height 0.9))))
  '(org-level-1 ((t (:inherit outline-1 :height 1.5))))
  '(org-level-2 ((t (:inherit outline-2 :height 1.3))))
  '(org-level-3 ((t (:inherit outline-3 :height 1.2))))
@@ -189,7 +197,7 @@
  '(custom-safe-themes
    '("f64189544da6f16bab285747d04a92bd57c7e7813d8c24c30f382f087d460a33" "0c08a5c3c2a72e3ca806a29302ef942335292a80c2934c1123e8c732bb2ddd77" "8d8207a39e18e2cc95ebddf62f841442d36fcba01a2a9451773d4ed30b632443" "56044c5a9cc45b6ec45c0eb28df100d3f0a576f18eef33ff8ff5d32bac2d9700" "636b135e4b7c86ac41375da39ade929e2bd6439de8901f53f88fde7dd5ac3561" "b9761a2e568bee658e0ff723dd620d844172943eb5ec4053e2b199c59e0bcc22" "00cec71d41047ebabeb310a325c365d5bc4b7fab0a681a2a108d32fb161b4006" "5f128efd37c6a87cd4ad8e8b7f2afaba425425524a68133ac0efd87291d05874" "467dc6fdebcf92f4d3e2a2016145ba15841987c71fbe675dcfe34ac47ffb9195" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" "545ab1a535c913c9214fe5b883046f02982c508815612234140240c129682a68" default))
  '(package-selected-packages
-   '(origami openwith docker xterm-color exec-path-from-shell eshell-z elpy python-mode consult-lsp typescript-mode yasnippet-snippets undo-fu-session meow dap-mode treesit-auto visual-fill-column nov use-package-chords which-key web-mode vterm vertico use-package undo-tree tree-sitter-langs tide super-save sly rjsx-mode rg rainbow-delimiters puni prettier-js prettier pdf-tools org-bullets orderless nerd-icons marginalia magit lua-mode lsp-mode key-chord hydra fennel-mode embark-consult doom-themes doom-modeline dirvish diff-hl denote crux corfu consult-notes consult-eglot cider cape browse-kill-ring anzu ansible annalist all-the-icons ace-window))
+   '(haskell-mode rainbow-mode browse-kill-ring consult-eglot eglot git-timemachine nginx-mode openwith docker xterm-color exec-path-from-shell eshell-z elpy python-mode consult-lsp typescript-mode yasnippet-snippets undo-fu-session meow dap-mode treesit-auto visual-fill-column nov use-package-chords which-key web-mode vterm vertico use-package undo-tree tree-sitter-langs tide super-save sly rjsx-mode rg rainbow-delimiters puni prettier-js prettier pdf-tools org-bullets orderless nerd-icons marginalia magit lua-mode lsp-mode key-chord hydra fennel-mode embark-consult doom-themes doom-modeline dirvish diff-hl denote crux corfu consult-notes cider cape anzu ansible annalist all-the-icons ace-window))
  '(safe-local-variable-values '((eval message "hello"))))
 (put 'upcase-region 'disabled nil)
 
