@@ -1,6 +1,16 @@
+
 ;; (defun ctrl-prefix (char)
 ;;   (interactive "c" )
 ;;   (execute-kbd-macro (kbd (concat "C-" (string char)))))
+
+(defun my/toggle-relative-line-numbers ()
+  (interactive)
+  (progn
+    (display-line-numbers-mode)
+    (if (eq display-line-numbers-type 'relative)
+        (setq display-line-numbers-type 'normal)
+      (setq display-line-numbers-type 'relative))
+    (display-line-numbers-mode)))
 
 (use-package inc-and-dec
   :ensure nil)
@@ -35,6 +45,11 @@
    '("b b" .  switch-to-buffer)
    '("b i" .  ibuffer)
    '("b k" .  kill-buffer)
+   '("b r" .  rename-buffer)
+   '("b n" .  narrow-to-region)
+   '("b w" .  widen)
+   '("b ," .  clone-indirect-buffer)
+
    '("b t" .  kill-this-buffer)
    '("b m" .  switch-to-minibuffer)
    '("b o" . org+-buffer-name-to-title)
@@ -42,6 +57,7 @@
 
    '("e k" .  kill-emacs)
    '("e r" .  restart-emacs)
+   '("e l" . my/toggle-relative-line-numbers)
 
    '("f f" .  hydra-flycheck/flycheck-next-error)
 
@@ -49,10 +65,12 @@
    ;; '("g s" . magit-status)
    '("k b" .  copy-buffer-name)
    '("k f" .  copy-buffer-file-name)
+   '("k a" .  meow-save-append)
+   '("k e" .  meow-append-at-end)
 
    '("l" . "C-c l") ;; used in LSP mode
 
-   '("n r" . narrow-to-region)
+   ;; '("n r" . narrow-to-region)
 
    '("o a" . org-agenda)
    ;; '("o s" . eshell)
@@ -66,6 +84,8 @@
    '("w s" . split-window-below)
    '("w r" . delete-other-windows)
    '("w f m" . make-frame-command)
+   '("w f o" . other-frame)
+
    '("w f r" . delete-other-frames)
 
    '("SPC" .  execute-extended-command)
@@ -163,6 +183,10 @@
    '("x (" . puni-wrap-round)
    '("x {" . puni-wrap-curly)
    '("x [" . puni-wrap-square)
+   '("x '" . my/puni-wrap-single-quote)
+   '("x \"" . my/puni-wrap-double-quote)
+   '("x <" . puni-wrap-angle)
+   '("x `" . my/puni-wrap-grave)
    '("x SPC" . pop-to-mark-command)
 
    '("y" . meow-yank)
@@ -181,23 +205,30 @@
   :config
   (global-set-key (kbd "C-x r C-.") #'point-to-register)
 
+  (defvar pop-to-mark-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "SPC") #'pop-to-mark-command)
+      map))
+  (dolist (cmd '(pop-to-mark-command))
+    (put cmd 'repeat-map 'pop-to-mark-repeat-map))
+
   (setq meow-keypad-start-keys '((?i . ?c) ;;breaks naming convention but frees c in leader
                                  ;; (?h . ?h) ;;removed inorder to rebind h to C-M-
                                  (?t . ?x))) ;; easier to access than x
 
-(setq meow-simple-motion-keymap (make-keymap))
-(meow-define-state simple-motion
-  "meow state for motion without meow commands"
-  :lighter " [S]"
-  :keymap meow-simple-motion-keymap)
-(meow-define-keys 'simple-motion
+  (setq meow-simple-motion-keymap (make-keymap))
+  (meow-define-state simple-motion
+    "meow state for motion without meow commands"
+    :lighter " [S]"
+    :keymap meow-simple-motion-keymap)
+  (meow-define-keys 'simple-motion
 
-  '("<escape>" . meow-motion-mode)
-  ;; '("n" . "n")
-  '("e" . "p")
-  '("SPC" . meow-keypad))
-(add-to-list 'meow-mode-state-list '(xref--xref-buffer-mode . meow-simple-motion-mode))
-;; (add-to-list 'meow-mode-state-list '(magit-status-mode . meow-simple-motion-mode))
+    '("<escape>" . meow-motion-mode)
+    ;; '("n" . "n")
+    '("e" . "p")
+    '("SPC" . meow-keypad))
+  (add-to-list 'meow-mode-state-list '(xref--xref-buffer-mode . simple-motion))
+  ;; (add-to-list 'meow-mode-state-list '(magit-status-mode . meow-simple-motion-mode))
 
   (setq meow-keypad-ctrl-meta-prefix ?h)
   ;; meow-define-state creates the variable
@@ -267,7 +298,7 @@ the lookup skips over nodes with the same starting point as the child"
     (let ((node (treesit-node-at (point)) ))
       (goto-char (treesit-node-start (treesit-node-prev-sibling node)))))
 
-   (setq meow-expand-hint-counts
+  (setq meow-expand-hint-counts
         '((word . 10)
           (line . 10)
           (block . 10)
@@ -275,13 +306,50 @@ the lookup skips over nodes with the same starting point as the child"
           (till . 10)))
 
   (setq meow-use-clipboard t)
+
   (setq meow-replace-state-name-list
-        '((normal . "󰫻")
-          (motion . "󰫺")
-          (keypad . "󰫸")
-          (insert . "󰫲")
-          (beacon . "󰫯")
-          (meow-simple-motion-mode . "󰬀")))
+        '((normal . "󰰓")
+          (motion . "󰰐")
+          (keypad . "󰰊")
+          (insert . "󰰄")
+          (beacon . "󰯯")
+          (simple-motion . "󰰢")))
+
+  (defface my/meow-normal-indicator '((t :foreground "#87af87" :font "Hack Nerd Font-13"))
+    "normal state indicator"
+    :group 'meow)
+
+  (defface my/meow-keypad-indicator '((t :foreground "#e68183" :font "Hack Nerd Font-13"))
+    "key state indicator"
+    :group 'meow)
+
+
+  (defface my/meow-insert-indicator '((t :foreground "#d3a0bc" :font "Hack Nerd Font-13"))
+    "key state indicator"
+    :group 'meow)
+
+  (defface my/meow-beacon-indicator '((t :foreground "#89beba" :font "Hack Nerd Font-13"))
+    "key state indicator"
+    :group 'meow)
+
+  (defface my/meow-motion-indicator '((t :foreground "#e68183"
+                                         :font "Hack Nerd Font-13"))
+    "key state indicator"
+    :group 'meow)
+
+  (defface my/meow-simple-motion-indicator '((t :foreground "#e68183":font "Hack Nerd Font-13"))
+    "key state indicator"
+    :group 'meow)
+
+  (setq meow-indicator-face-alist
+        '((normal . my/meow-normal-indicator)
+          (motion . my/meow-motion-indicator)
+          (simple-motion . my/meow-simple-motion-indicator)
+
+          (keypad . my/meow-keypad-indicator)
+          (insert . my/meow-insert-indicator)
+          (beacon . my/meow-beacon-indicator)))
+
   (meow-setup)
 
   ;;fixed meow-end-kmacro to allow it to be called via keypad
