@@ -1,112 +1,155 @@
-
 * Keybindings
 #+BEGIN_SRC emacs-lisp
 
-    (use-package evil
-      :demand t
-      :bind (("<escape>" . keyboard-escape-quit))
-      :init
-      ;; allows for using cgn
-      ;; (setq evil-search-module 'evil-search)
-      (setq evil-want-keybinding nil)
-      ;; no vim insert bindings
-      (setq evil-undo-system 'undo-tree)
-      :config
-      (evil-mode 1))
+  (use-package evil
+    :demand t
+    :bind (("<escape>" . keyboard-escape-quit))
+    :init
+    ;; allows for using cgn
+    ;; (setq evil-search-module 'evil-search)
+    (setq evil-want-keybinding nil)
+    ;; no vim insert bindings
+    (setq evil-undo-system 'undo-tree)
+    :config
+    (evil-mode 1))
 
-        ;;; Vim Bindings Everywhere else
-    (use-package evil-collection
-      :after evil
-      :config
-      (setq evil-want-integration t)
-      (evil-collection-init))
+                  ;;; Vim Bindings Everywhere else
+  (use-package evil-collection
+    :after evil
+    :config
+    (setq evil-want-integration t)
+    (evil-collection-init))
 
 
-    (use-package general
-      :after (evil)
-      :config
-      (general-evil-setup)
-      (general-auto-unbind-keys)
-  (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
-  (general-define-key :keymaps 'evil-insert-state-map
-                      (general-chord "jk") 'evil-normal-state
-                      (general-chord "kj") 'evil-normal-state
+  (use-package general
+    :after (evil)
+    :config
+    (general-evil-setup)
+    (general-auto-unbind-keys)
 
-                      (general-chord "jj") 'avy-goto-word-1
+    (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map)
+                          "S-SPC" 'execute-extended-command-for-buffer
+                        "C-e" 'evil-end-of-line
+                        "gs" '("avy-char" . avy-goto-char)
+                        "gl" '("avy-line" . avy-goto-line))
+    (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+    (general-define-key :keymaps 'evil-insert-state-map
+                        (general-chord "jk") 'evil-normal-state
+                        (general-chord "kj") 'evil-normal-state
+                        (general-chord "jl") 'avy-goto-line)
+    (general-define-key
+     :states '(normal motion emacs)
+     :keymaps 'override
+     :prefix-map 'normal-tyrant-map
+     :prefix "SPC")
+    (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
+    (my/normal-leader
+      "SPC" '("M-x" . execute-extended-command)
+      ;; "TAB" '("latest buffer" . mode-line-other-buffer)
 
-                      (general-chord "jl") 'avy-goto-line
-  )
-      (general-define-key
-       :states '(normal motion emacs)
-       :keymaps 'override
-       :prefix-map 'normal-tyrant-map
-       :prefix "SPC"
-       )
-      (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
-      (my/normal-leader
-        "SPC" '("M-x" . execute-extended-command)
-        ;; "TAB" '("latest buffer" . mode-line-other-buffer)
+      "b" (cons "bufs" (make-sparse-keymap))
+      "bk" '("kill" . kill-this-buffer)
 
-        "b" (cons "bufs" (make-sparse-keymap))
-        "bk" '("kill" . kill-this-buffer)
+      "bb" '("switch" . consult-buffer)
+      "be" '("eval" . eval-buffer)
+      "b." '("scratch" . scratch-buffer)
+      "bm" '("mini" . switch-to-minibuffer)
 
-        "bb" '("switch" . consult-buffer)
-        "be" '("eval" . eval-buffer)
-        "b." '("scratch" . scratch-buffer)
-        "bm" '("mini" . switch-to-minibuffer)
-        "d" (cons "denote" (make-sparse-keymap))
-        "dm" '("make" . denote)
-        "ds" '("search" . consult-notes)
+      "d" (cons "denote" (make-sparse-keymap))
+      "dm" '("make" . denote)
+      "ds" '("search" . consult-notes)
 
-        "f" (cons "file" (make-sparse-keymap))
-        "ff" '("find" . find-file)
-        "fs" '("save" . save-buffer)
+      "e" (cons "emacs" (make-sparse-keymap))
+        "el" '("pack-list" . package-list-packages)
+        "er" '("restart" . restart-emacs)
+        "ek" '("kill" . kill-emacs)
 
-        "g" (cons "git" (make-sparse-keymap))
-        "gg" '("status". magit-status)
-        "gb" '("checkout". magit-branch-checkout)
-        "gc" '("branch+checkout" . magit-branch-and-checkout)
-        "l"  (general-simulate-key "C-c l")
-        "m" (cons "meta" (make-sparse-keymap))
-        "m." '("def" . xref-find-definitions)
+      "f" (cons "file" (make-sparse-keymap))
+      "ff" '("find" . find-file)
+      "fs" '("save" . save-buffer)
 
-        "m," '("def-back" . xref-go-back)
-        "p" (cons "project" project-prefix-map)
-        "s" '("search" . consult-line)
-        "w" (cons "window" (make-sparse-keymap))
-        "wv" '("vsplit" . split-window-right)
-        "ws" '("split" . split-window-below)
-        "wr" '("remove" . delete-other-windows)
+      "g" (cons "git" (make-sparse-keymap))
+      "gg" '("status". magit-status)
+      "gb" '("checkout". magit-branch-checkout)
+      "gc" '("branch+checkout" . magit-branch-and-checkout)
 
-      ))
-    (use-package repeat
-      :config
-      (repeat-mode)
+      "k" (cons "kill" (make-sparse-keymap))
+      "ks" '("search" . consult-yank-from-kill-ring)
 
-      (defvar repeat-isearch-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "s") 'isearch-repeat-forward)
-          (define-key map (kbd "r") 'isearch-repeat-backward)
-          (define-key map (kbd "w") 'isearch-yank-word-or-char)
+      "l"  (general-simulate-key "C-c l")
 
-          map))
-      (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
-        (put cmd 'repeat-map 'repeat-isearch-map))
+      "m" (cons "meta" (make-sparse-keymap))
+      "m." '("def" . xref-find-definitions)
+      "m," '("def-back" . xref-go-back)
+
+      "o" (cons "open" (make-sparse-keymap))
+      "oe" '("eshell" . eshell)
+      "oa" '("agenda" . org-agenda)
+
+      "p" (cons "project" project-prefix-map)
+
+      "s" '("search" . consult-line)
+
+      "u" '("undo-tree" . undo-tree)
+
+      "w" (cons "window" (make-sparse-keymap))
+      "wv" '("vsplit" . split-window-right)
+      "ws" '("split" . split-window-below)
+      "wr" '("remove" . delete-other-windows)
+      "wa" '("ace" . ace-window)
+      "wf" (cons "frame" (make-sparse-keymap))
+      "wfm" '("make" . make-frame)
+      "wfk" '("kill" . delete-other-frames)
       )
 
-    ;; (general-define-key
-    ;;  :states '(visual)
-    ;;  :keymaps 'override
-    ;;  :prefix-map 'visual-tyrant-map
-    ;;  :prefix "SPC"
-    ;; )
-    ;; (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
-    ;; (my/visual-leader
-    ;;  "SPC" '("M-x" . execute-extended-command)
-    ;;    "l" '("line" . avy-goto-line)
-    ;;    "j" '("char" . avy-goto-char)
-    ;;  )
 
+    (general-define-key
+     :states 'visual
+     :keymaps 'override
+     :prefix-map 'visual-tyrant-map
+     :prefix "s"
+     )
+    (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
+    (my/visual-leader
+      "r" '("round" . puni-wrap-round)
+      "s" '("square" . puni-wrap-square)
+      "c" '("curly" . puni-wrap-curly)
+
+      "a" '("angle" . puni-wrap-angle)
+      "d" '("double-quote" . my/puni-wrap-double-quote)
+      "'" '("quote" . my/puni-wrap-single-quote)
+      "g" '("grav" . my/puni-wrap-grave)
+      "h" '("html" . my/puni-wrap-html-wrap)
+      ";" '("comment" . comment-dwim)
+      )
+    )
+  (use-package repeat
+    :config
+    (repeat-mode)
+
+    (defvar repeat-isearch-map
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "s") 'isearch-repeat-forward)
+        (define-key map (kbd "r") 'isearch-repeat-backward)
+        (define-key map (kbd "w") 'isearch-yank-word-or-char)
+
+        map))
+    (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
+      (put cmd 'repeat-map 'repeat-isearch-map))
+    )
+
+  ;; (general-define-key
+  ;;  :states '(visual)
+  ;;  :keymaps 'override
+  ;;  :prefix-map 'visual-tyrant-map
+  ;;  :prefix "SPC"
+  ;; )
+  ;; (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
+  ;; (my/visual-leader
+  ;;  "SPC" '("M-x" . execute-extended-command)
+  ;;    "l" '("line" . avy-goto-line)
+  ;;    "j" '("char" . avy-goto-char)
+  ;;  )
 
 #+END_SRC
 
@@ -185,8 +228,7 @@
       ;; :elpaca t
       :general
       (:states '(normal visual)
-               "C-a"  #'crux-move-beginning-of-line
-               "b c" #'crux-cleanup-buffer-or-region )
+               "C-a"  #'crux-move-beginning-of-line)
       ;; :bind (:map tyrant-map
 
       ;;             ("b c" .  crux-cleanup-buffer-or-region)
@@ -244,8 +286,7 @@
          ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
 
       (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
-      (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face))
-      (setq aw-keys ' (?h ?n ?e ?i ?r ?s ?t ?d)))
+      (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face)))
 
     (use-package puni
       :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square my/puni-wrap-single-quote
@@ -1338,3 +1379,4 @@
   (elpy-enable))
 #+END_SR
 C
+
