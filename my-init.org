@@ -1,155 +1,178 @@
+
 * Keybindings
 #+BEGIN_SRC emacs-lisp
 
-  (use-package evil
-    :demand t
-    :bind (("<escape>" . keyboard-escape-quit))
-    :init
-    ;; allows for using cgn
-    ;; (setq evil-search-module 'evil-search)
-    (setq evil-want-keybinding nil)
-    ;; no vim insert bindings
-    (setq evil-undo-system 'undo-tree)
-    :config
-    (evil-mode 1))
+    (use-package evil
+      :demand t
+      :bind (("<escape>" . keyboard-escape-quit))
+      :init
+      ;; allows for using cgn
+      ;; (setq evil-search-module 'evil-search)
 
-                  ;;; Vim Bindings Everywhere else
-  (use-package evil-collection
-    :after evil
-    :config
-    (setq evil-want-integration t)
-    (evil-collection-init))
+  (setq evil-disable-insert-state-bindings t)
+      (setq evil-want-keybinding nil)
+      ;; no vim insert bindings
+      (setq evil-undo-system 'undo-tree)
+      :config
+      (evil-mode 1)
+      (setq evil-insert-state-cursor '(hbar . 3)))
+
+                    ;;; Vim Bindings Everywhere else
+    (use-package evil-collection
+      :after evil
+      :config
+      (setq evil-want-integration t)
+      (evil-collection-init))
 
 
-  (use-package general
-    :after (evil)
-    :config
-    (general-evil-setup)
-    (general-auto-unbind-keys)
+    (use-package general
+      :after (evil)
+      :config
+      (general-evil-setup)
+      (general-auto-unbind-keys)
 
-    (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map)
-                          "S-SPC" 'execute-extended-command-for-buffer
-                        "C-e" 'evil-end-of-line
-                        "gs" '("avy-char" . avy-goto-char)
-                        "gl" '("avy-line" . avy-goto-line))
-    (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
-    (general-define-key :keymaps 'evil-insert-state-map
-                        (general-chord "jk") 'evil-normal-state
-                        (general-chord "kj") 'evil-normal-state
-                        (general-chord "jl") 'avy-goto-line)
-    (general-define-key
-     :states '(normal motion emacs)
-     :keymaps 'override
-     :prefix-map 'normal-tyrant-map
-     :prefix "SPC")
-    (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
-    (my/normal-leader
-      "SPC" '("M-x" . execute-extended-command)
-      ;; "TAB" '("latest buffer" . mode-line-other-buffer)
+      (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map)
+                            "S-SPC" 'execute-extended-command-for-buffer
+                          "C-e" 'evil-end-of-line
+                          "gs" '("avy-char" . avy-goto-char)
+                          "gl" '("avy-line" . avy-goto-line))
+      (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+      (general-define-key :keymaps 'evil-insert-state-map
+                          (general-chord "jk") 'evil-normal-state
+                          (general-chord "kj") 'evil-normal-state
+                          (general-chord "jl") 'avy-goto-line)
+      (general-define-key
+       :states '(normal motion)
+       :keymaps 'override
+       :prefix-map 'normal-tyrant-map
+       :prefix "SPC")
+  (general-define-key
+       :states 'emacs
+       :keymaps 'override
+       :prefix-map 'normal-tyrant-map
+       :prefix "M-SPC")
+      (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
+      (my/normal-leader
+        "SPC" '("M-x" . execute-extended-command)
+        ;; "TAB" '("latest buffer" . mode-line-other-buffer)
 
-      "b" (cons "bufs" (make-sparse-keymap))
-      "bk" '("kill" . kill-this-buffer)
+        "b" (cons "bufs" (make-sparse-keymap))
+        "bk" '("kill" . kill-this-buffer)
+        "bb" '("switch" . consult-buffer)
+        "be" '("eval" . eval-buffer)
+        "b." '("scratch" . scratch-buffer)
+        "bm" '("mini" . switch-to-minibuffer)
+        "bi" '("ibuffer" . ibuffer)
+          "bs" '("sudo" . crux-sudo-edit)
 
-      "bb" '("switch" . consult-buffer)
-      "be" '("eval" . eval-buffer)
-      "b." '("scratch" . scratch-buffer)
-      "bm" '("mini" . switch-to-minibuffer)
+        "d" (cons "denote" (make-sparse-keymap))
+        "dm" '("make" . denote)
+        "ds" '("search" . consult-notes)
 
-      "d" (cons "denote" (make-sparse-keymap))
-      "dm" '("make" . denote)
-      "ds" '("search" . consult-notes)
-
-      "e" (cons "emacs" (make-sparse-keymap))
+        "e" (cons "emacs" (make-sparse-keymap))
+          "ee" '("eval" . eval-last-sexp)
         "el" '("pack-list" . package-list-packages)
         "er" '("restart" . restart-emacs)
         "ek" '("kill" . kill-emacs)
 
-      "f" (cons "file" (make-sparse-keymap))
-      "ff" '("find" . find-file)
-      "fs" '("save" . save-buffer)
+        "f" (cons "file" (make-sparse-keymap))
+        "ff" '("find" . find-file)
+        "fs" '("save" . save-buffer)
 
-      "g" (cons "git" (make-sparse-keymap))
-      "gg" '("status". magit-status)
-      "gb" '("checkout". magit-branch-checkout)
-      "gc" '("branch+checkout" . magit-branch-and-checkout)
+        "g" (cons "git" (make-sparse-keymap))
+        "gg" '("status". magit-status)
+        "gb" '("checkout". magit-branch-checkout)
+        "gc" '("branch+checkout" . magit-branch-and-checkout)
 
-      "k" (cons "kill" (make-sparse-keymap))
-      "ks" '("search" . consult-yank-from-kill-ring)
+        "j" (cons "jump" (make-sparse-keymap))
+        "jl" '("line" . avy-goto-line)
+        "je" '("e-line" . my/avy-goto-end-of-line)
+        "jj" '("char" . avy-goto-char)
+        "j;" '("open" . avy-goto-xah-open)
+        "jr" '("mark" . jump-to-register)
+        "j." '("set-mark" . point-to-register)
+        "jb" '("bookmark" . bookmark-jump)
+        "jB" '("bookmark-set" . bookmark-set)
 
-      "l"  (general-simulate-key "C-c l")
+        "k" (cons "kill" (make-sparse-keymap))
+        "ks" '("search" . consult-yank-from-kill-ring)
 
-      "m" (cons "meta" (make-sparse-keymap))
-      "m." '("def" . xref-find-definitions)
-      "m," '("def-back" . xref-go-back)
+        "l"  (general-simulate-key "C-c l")
 
-      "o" (cons "open" (make-sparse-keymap))
-      "oe" '("eshell" . eshell)
-      "oa" '("agenda" . org-agenda)
+        "m" (cons "meta" (make-sparse-keymap))
+        "m." '("def" . xref-find-definitions)
+        "m," '("def-back" . xref-go-back)
 
-      "p" (cons "project" project-prefix-map)
+        "o" (cons "open" (make-sparse-keymap))
+        "oe" '("eshell" . eshell)
+        "oa" '("agenda" . org-agenda)
 
-      "s" '("search" . consult-line)
+        "p" (cons "project" project-prefix-map)
 
-      "u" '("undo-tree" . undo-tree)
+        "s" '("search" . consult-line)
 
-      "w" (cons "window" (make-sparse-keymap))
-      "wv" '("vsplit" . split-window-right)
-      "ws" '("split" . split-window-below)
-      "wr" '("remove" . delete-other-windows)
-      "wa" '("ace" . ace-window)
-      "wf" (cons "frame" (make-sparse-keymap))
-      "wfm" '("make" . make-frame)
-      "wfk" '("kill" . delete-other-frames)
+        "u" '("undo-tree" . undo-tree)
+
+        "w" (cons "window" (make-sparse-keymap))
+        "wv" '("vsplit" . split-window-right)
+        "ws" '("split" . split-window-below)
+        "wr" '("remove" . delete-other-windows)
+        "wa" '("ace" . ace-window)
+          "wo" '("other" . crux-other-window-or-switch-buffer)
+        "wf" (cons "frame" (make-sparse-keymap))
+        "wfm" '("make" . make-frame)
+        "wfk" '("kill" . delete-other-frames)
+        "wfd" '("kill-this" . delete-frame)
+        ";" '("embark" . embark-act))
+
+
+      (general-define-key
+       :states 'visual
+       :keymaps 'override
+       :prefix-map 'visual-tyrant-map
+       :prefix "s"
+       )
+      (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
+      (my/visual-leader
+        "r" '("round" . puni-wrap-round)
+        "s" '("square" . puni-wrap-square)
+        "c" '("curly" . puni-wrap-curly)
+
+        "a" '("angle" . puni-wrap-angle)
+        "d" '("double-quote" . my/puni-wrap-double-quote)
+        "'" '("quote" . my/puni-wrap-single-quote)
+        "g" '("grav" . my/puni-wrap-grave)
+        "h" '("html" . my/puni-wrap-html-wrap)
+        ";" '("comment" . comment-dwim)
+        )
+      )
+    (use-package repeat
+      :config
+      (repeat-mode)
+
+      (defvar repeat-isearch-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "s") 'isearch-repeat-forward)
+          (define-key map (kbd "r") 'isearch-repeat-backward)
+          (define-key map (kbd "w") 'isearch-yank-word-or-char)
+
+          map))
+      (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
+        (put cmd 'repeat-map 'repeat-isearch-map))
       )
 
-
-    (general-define-key
-     :states 'visual
-     :keymaps 'override
-     :prefix-map 'visual-tyrant-map
-     :prefix "s"
-     )
-    (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
-    (my/visual-leader
-      "r" '("round" . puni-wrap-round)
-      "s" '("square" . puni-wrap-square)
-      "c" '("curly" . puni-wrap-curly)
-
-      "a" '("angle" . puni-wrap-angle)
-      "d" '("double-quote" . my/puni-wrap-double-quote)
-      "'" '("quote" . my/puni-wrap-single-quote)
-      "g" '("grav" . my/puni-wrap-grave)
-      "h" '("html" . my/puni-wrap-html-wrap)
-      ";" '("comment" . comment-dwim)
-      )
-    )
-  (use-package repeat
-    :config
-    (repeat-mode)
-
-    (defvar repeat-isearch-map
-      (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "s") 'isearch-repeat-forward)
-        (define-key map (kbd "r") 'isearch-repeat-backward)
-        (define-key map (kbd "w") 'isearch-yank-word-or-char)
-
-        map))
-    (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
-      (put cmd 'repeat-map 'repeat-isearch-map))
-    )
-
-  ;; (general-define-key
-  ;;  :states '(visual)
-  ;;  :keymaps 'override
-  ;;  :prefix-map 'visual-tyrant-map
-  ;;  :prefix "SPC"
-  ;; )
-  ;; (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
-  ;; (my/visual-leader
-  ;;  "SPC" '("M-x" . execute-extended-command)
-  ;;    "l" '("line" . avy-goto-line)
-  ;;    "j" '("char" . avy-goto-char)
-  ;;  )
+    ;; (general-define-key
+    ;;  :states '(visual)
+    ;;  :keymaps 'override
+    ;;  :prefix-map 'visual-tyrant-map
+    ;;  :prefix "SPC"
+    ;; )
+    ;; (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
+    ;; (my/visual-leader
+    ;;  "SPC" '("M-x" . execute-extended-command)
+    ;;    "l" '("line" . avy-goto-line)
+    ;;    "j" '("char" . avy-goto-char)
+    ;;  )
 
 #+END_SRC
 
@@ -227,7 +250,7 @@
       ;; :ensure t
       ;; :elpaca t
       :general
-      (:states '(normal visual)
+      (:states '(normal visual insert)
                "C-a"  #'crux-move-beginning-of-line)
       ;; :bind (:map tyrant-map
 
@@ -247,98 +270,99 @@
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
 
-    (use-package which-key
+  (use-package which-key
+    ;; :elpaca t
+    :defer 2
+    :init (which-key-mode)
+    ;;(which-key-enable-god-mode-support)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 1.0))
+
+  (defun match-paren (arg)
+    "Go to the matching paren if on a paren; otherwise insert %."
+    (interactive "p")
+    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+          (t (self-insert-command (or arg 1)))))
+
+  (use-package anzu
+    :ensure t
+    ;; :elpaca t
+    :commands (anzu-query-replace-at-cursor)
+    :config
+    (global-anzu-mode +1)
+    (custom-set-variables
+     '(anzu-mode-lighter "")
+     '(anzu-replace-to-string-separator " => "))
+
+    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp))
+
+  (use-package ace-window
+    :ensure t
+    ;; :elpaca t
+    :bind (("C-c w a" . ace-window))
+    :config
+(setq aw-keys '(?j ?k ?l ?a ?s ?d ?f ?g ?h ))
+    (custom-set-faces
+     '(aw-leading-char-face
+       ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
+
+    (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
+    (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face)))
+
+  (use-package puni
+    :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square my/puni-wrap-single-quote
+                               my/puni-wrap-double-quote my/puni-wrap-angle
+                               my/puni-wrap-grave my/puni-html-wrap)
+    :bind (("C-<" . puni-barf-backward)
+           ("C-}" . puni-barf-forward)
+           ("C-(" . puni-slurp-backward)
+           ("C->" . puni-slurp-forward))
+    :config
+    (defun my/puni-wrap-single-quote (&optional n)
+      (interactive "P")
+      (puni-wrap-next-sexps
+       (puni--parse-interactive-argument-for-wrap n)
+       "'" "'"))
+    (defun my/puni-wrap-double-quote (&optional n)
+      (interactive "P")
+      (puni-wrap-next-sexps
+       (puni--parse-interactive-argument-for-wrap n)
+       "\"" "\""))
+    (defun my/puni-wrap-grave (&optional n)
+      (interactive "P")
+      (puni-wrap-next-sexps
+       (puni--parse-interactive-argument-for-wrap n)
+       "`" "`"))
+    (defun my/puni-html-wrap (html-element)
+      (interactive "sElement:")
+      ;; (message "%s" html-element)
+      (puni-wrap-next-sexps (puni--parse-interactive-argument-for-wrap 0)
+                            (format "<%s>" html-element) (format "</%s>" html-element)))
+
+    )
+
+  (use-package hydra
+    :defer t
       ;; :elpaca t
-      :defer 2
-      :init (which-key-mode)
-      ;;(which-key-enable-god-mode-support)
-      :diminish which-key-mode
-      :config
-      (setq which-key-idle-delay 1.0))
+    :ensure t)
 
-    (defun match-paren (arg)
-      "Go to the matching paren if on a paren; otherwise insert %."
-      (interactive "p")
-      (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-            ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-            (t (self-insert-command (or arg 1)))))
+  (use-package useful-hydras
+    ;; :elpaca nil
+    :ensure nil
+    :commands (hydra-flycheck/flycheck-next-error avy-goto-xah-open hydra-avy/body)
+    :bind (("C-c x t" . hydra-bracket-mov/body)
+           ("C-c x d" . hydra-diff-hl/body)
+           ("C-c x x" . hydra-buffer-file/body)))
 
-    (use-package anzu
-      :ensure t
-      ;; :elpaca t
-      :commands (anzu-query-replace-at-cursor)
-      :config
-      (global-anzu-mode +1)
-      (custom-set-variables
-       '(anzu-mode-lighter "")
-       '(anzu-replace-to-string-separator " => "))
-
-      (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-      (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp))
-
-    (use-package ace-window
-      :ensure t
-      ;; :elpaca t
-      :bind (("C-c w a" . ace-window))
-      :config
-      (custom-set-faces
-       '(aw-leading-char-face
-         ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
-
-      (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
-      (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face)))
-
-    (use-package puni
-      :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square my/puni-wrap-single-quote
-                                 my/puni-wrap-double-quote my/puni-wrap-angle
-                                 my/puni-wrap-grave my/puni-html-wrap)
-      :bind (("C-<" . puni-barf-backward)
-             ("C-}" . puni-barf-forward)
-             ("C-(" . puni-slurp-backward)
-             ("C->" . puni-slurp-forward))
-      :config
-      (defun my/puni-wrap-single-quote (&optional n)
-        (interactive "P")
-        (puni-wrap-next-sexps
-         (puni--parse-interactive-argument-for-wrap n)
-         "'" "'"))
-      (defun my/puni-wrap-double-quote (&optional n)
-        (interactive "P")
-        (puni-wrap-next-sexps
-         (puni--parse-interactive-argument-for-wrap n)
-         "\"" "\""))
-      (defun my/puni-wrap-grave (&optional n)
-        (interactive "P")
-        (puni-wrap-next-sexps
-         (puni--parse-interactive-argument-for-wrap n)
-         "`" "`"))
-      (defun my/puni-html-wrap (html-element)
-        (interactive "sElement:")
-        ;; (message "%s" html-element)
-        (puni-wrap-next-sexps (puni--parse-interactive-argument-for-wrap 0)
-                              (format "<%s>" html-element) (format "</%s>" html-element)))
-
-      )
-
-    (use-package hydra
-      :defer t
-        ;; :elpaca t
-      :ensure t)
-
-    (use-package useful-hydras
-      ;; :elpaca nil
-      :ensure nil
-      :commands (hydra-flycheck/flycheck-next-error avy-goto-xah-open hydra-avy/body)
-      :bind (("C-c x t" . hydra-bracket-mov/body)
-             ("C-c x d" . hydra-diff-hl/body)
-             ("C-c x x" . hydra-buffer-file/body)))
-
-    (defun kmacro-toggle-start-end ()
-      "Starts kmacro unless one is already in progress than it ends it"
-      (interactive)
-      (if defining-kbd-macro
-          (kmacro-end-macro 1)
-        (kmacro-start-macro 0)))
+  (defun kmacro-toggle-start-end ()
+    "Starts kmacro unless one is already in progress than it ends it"
+    (interactive)
+    (if defining-kbd-macro
+        (kmacro-end-macro 1)
+      (kmacro-start-macro 0)))
 
 #+END_SRC
 
@@ -1269,6 +1293,7 @@
             javascript-mode
             js-mode
             python-mode
+              typescript-ts-mode
             typescript-mode)
            . lsp-deferred)
     (lsp-completion-mode . my/lsp-mode-setup-completion)
@@ -1379,4 +1404,3 @@
   (elpy-enable))
 #+END_SR
 C
-
