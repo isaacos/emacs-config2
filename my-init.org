@@ -1,15 +1,14 @@
-
 * Keybindings
 #+BEGIN_SRC emacs-lisp
-
+    ;;respect visual line is required prior to evil loading
+    (setq evil-respect-visual-line-mode t)
     (use-package evil
       :demand t
       :bind (("<escape>" . keyboard-escape-quit))
       :init
       ;; allows for using cgn
-      ;; (setq evil-search-module 'evil-search)
-
-  (setq evil-disable-insert-state-bindings t)
+      (setq evil-want-minibuffer t)
+      (setq evil-disable-insert-state-bindings t)
       (setq evil-want-keybinding nil)
       ;; no vim insert bindings
       (setq evil-undo-system 'undo-tree)
@@ -17,60 +16,66 @@
       (evil-mode 1)
       (setq evil-insert-state-cursor '(hbar . 3)))
 
-                    ;;; Vim Bindings Everywhere else
+    ;; Vim Bindings Everywhere else
     (use-package evil-collection
+      :ensure t
       :after evil
       :config
       (setq evil-want-integration t)
       (evil-collection-init))
-
 
     (use-package general
       :after (evil)
       :config
       (general-evil-setup)
       (general-auto-unbind-keys)
-
       (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map)
-                            "S-SPC" 'execute-extended-command-for-buffer
+                          "S-SPC" 'execute-extended-command-for-buffer
                           "C-e" 'evil-end-of-line
-                          "gs" '("avy-char" . avy-goto-char)
-                          "gl" '("avy-line" . avy-goto-line))
+                          ;; "gs" '("avy-char" . avy-goto-char)
+                          ;; "gl" '("avy-line" . avy-goto-line)
+  )
       (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
       (general-define-key :keymaps 'evil-insert-state-map
                           (general-chord "jk") 'evil-normal-state
                           (general-chord "kj") 'evil-normal-state
+                          (general-chord "lj") 'avy-goto-line
                           (general-chord "jl") 'avy-goto-line)
       (general-define-key
        :states '(normal motion)
        :keymaps 'override
        :prefix-map 'normal-tyrant-map
        :prefix "SPC")
-  (general-define-key
-       :states 'emacs
+
+      (general-define-key
+       :states '(emacs insert)
        :keymaps 'override
        :prefix-map 'normal-tyrant-map
        :prefix "M-SPC")
+
       (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
       (my/normal-leader
         "SPC" '("M-x" . execute-extended-command)
-        ;; "TAB" '("latest buffer" . mode-line-other-buffer)
-
         "b" (cons "bufs" (make-sparse-keymap))
         "bk" '("kill" . kill-this-buffer)
         "bb" '("switch" . consult-buffer)
+        "bc" '("clean" . crux-cleanup-buffer-or-region)
         "be" '("eval" . eval-buffer)
         "b." '("scratch" . scratch-buffer)
         "bm" '("mini" . switch-to-minibuffer)
         "bi" '("ibuffer" . ibuffer)
-          "bs" '("sudo" . crux-sudo-edit)
+        "bs" '("sudo" . crux-sudo-edit)
+        "bl" '("reload" . revert-buffer)
+        "br" '("rename" . rename-buffer)
+
+        "B" '("proj-buffer" . consult-project-buffer)
 
         "d" (cons "denote" (make-sparse-keymap))
         "dm" '("make" . denote)
         "ds" '("search" . consult-notes)
 
         "e" (cons "emacs" (make-sparse-keymap))
-          "ee" '("eval" . eval-last-sexp)
+        "ee" '("eval" . eval-last-sexp)
         "el" '("pack-list" . package-list-packages)
         "er" '("restart" . restart-emacs)
         "ek" '("kill" . kill-emacs)
@@ -83,6 +88,16 @@
         "gg" '("status". magit-status)
         "gb" '("checkout". magit-branch-checkout)
         "gc" '("branch+checkout" . magit-branch-and-checkout)
+        "gs" '("grep" . consult-git-grep)
+
+        "h" (cons "help" (make-sparse-keymap))
+          "hk" '("key" . describe-key)
+          "hv" '("variable" . describe-variable)
+          "hf" '("func" . describe-function)
+
+        "i" (cons "imenu" (make-sparse-keymap))
+        "ii" '("imenu" . consult-imenu)
+        "im" '("imenu-multi" . consult-imenu-multi)
 
         "j" (cons "jump" (make-sparse-keymap))
         "jl" '("line" . avy-goto-line)
@@ -102,6 +117,7 @@
         "m" (cons "meta" (make-sparse-keymap))
         "m." '("def" . xref-find-definitions)
         "m," '("def-back" . xref-go-back)
+        "mv" '("scroll-other" . scroll-other-window)
 
         "o" (cons "open" (make-sparse-keymap))
         "oe" '("eshell" . eshell)
@@ -111,6 +127,13 @@
 
         "s" '("search" . consult-line)
 
+        "S" '("search" . consult-line-multi)
+
+        "t" (cons "toggle" (make-sparse-keymap))
+        "tl" '("lsp-list" . lsp-ui-imenu)
+        ;; "td" '("close-window" . tabspaces-close-workspace)
+        ;; "to" '("open/create" . tabspaces-open-or-create-project-and-workspace)
+
         "u" '("undo-tree" . undo-tree)
 
         "w" (cons "window" (make-sparse-keymap))
@@ -118,7 +141,7 @@
         "ws" '("split" . split-window-below)
         "wr" '("remove" . delete-other-windows)
         "wa" '("ace" . ace-window)
-          "wo" '("other" . crux-other-window-or-switch-buffer)
+        "wo" '("other" . crux-other-window-or-switch-buffer)
         "wf" (cons "frame" (make-sparse-keymap))
         "wfm" '("make" . make-frame)
         "wfk" '("kill" . delete-other-frames)
@@ -130,8 +153,7 @@
        :states 'visual
        :keymaps 'override
        :prefix-map 'visual-tyrant-map
-       :prefix "s"
-       )
+       :prefix "gs")
       (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
       (my/visual-leader
         "r" '("round" . puni-wrap-round)
@@ -143,9 +165,8 @@
         "'" '("quote" . my/puni-wrap-single-quote)
         "g" '("grav" . my/puni-wrap-grave)
         "h" '("html" . my/puni-wrap-html-wrap)
-        ";" '("comment" . comment-dwim)
-        )
-      )
+        ";" '("comment" . comment-dwim)))
+
     (use-package repeat
       :config
       (repeat-mode)
@@ -155,233 +176,227 @@
           (define-key map (kbd "s") 'isearch-repeat-forward)
           (define-key map (kbd "r") 'isearch-repeat-backward)
           (define-key map (kbd "w") 'isearch-yank-word-or-char)
-
           map))
       (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
         (put cmd 'repeat-map 'repeat-isearch-map))
-      )
 
-    ;; (general-define-key
-    ;;  :states '(visual)
-    ;;  :keymaps 'override
-    ;;  :prefix-map 'visual-tyrant-map
-    ;;  :prefix "SPC"
-    ;; )
-    ;; (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
-    ;; (my/visual-leader
-    ;;  "SPC" '("M-x" . execute-extended-command)
-    ;;    "l" '("line" . avy-goto-line)
-    ;;    "j" '("char" . avy-goto-char)
-    ;;  )
+      (defvar repeat-xref-next-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "j") 'xref-next-line)
+          (define-key map (kbd "k") 'xref-prev-line)
+          map))
+      (dolist (cmd '(xref-next-line xref-prev-line))
+        (put cmd 'repeat-map 'repeat-xref-next-map)))
 
 #+END_SRC
 
+
+* workspaces
+#+BEGIN_SRC emacs-lisp
+;; (use-package tabspaces
+;;   ;; use this next line only if you also use straight, otherwise ignore it.
+;;   :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup.
+;;   :commands (tabspaces-switch-or-create-workspace
+;;              tabspaces-open-or-create-project-and-workspace)
+;;   :custom
+;;   (tabspaces-use-filtered-buffers-as-default t)
+;;   (tabspaces-default-tab "Default")
+;;   (tabspaces-remove-to-default t)
+;;   (tabspaces-include-buffers '("*scratch*"))
+;;   (tabspaces-initialize-project-with-todo t)
+;;   ;; sessions
+;;   (tabspaces-session t)
+;;   (tabspaces-session-auto-restore t))
+
+
+
+;; ;; Filter Buffers for Consult-Buffer
+
+;; (with-eval-after-load 'consult
+;; ;; hide full buffer list (still available with "b" prefix)
+;; (consult-customize consult--source-buffer :hidden t :default nil)
+;; ;; set consult-workspace buffer list
+;; (defvar consult--source-workspace
+;;   (list :name     "Workspace Buffers"
+;;         :narrow   ?w
+;;         :history  'buffer-name-history
+;;         :category 'buffer
+;;         :state    #'consult--buffer-state
+;;         :default  t
+;;         :items    (lambda () (consult--buffer-query
+;;                          :predicate #'tabspaces--local-buffer-p
+;;                          :sort 'visibility
+;;                          :as #'buffer-name)))
+
+;;   "Set workspace buffer list for consult-buffer.")
+;; (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+#+END_SRC
 * essentials
 #+BEGIN_SRC emacs-lisp
-    (fset 'yes-or-no-p 'y-or-n-p)
-    (use-package key-chord
-  ;;    :ensure t
-      ;; :elpaca t
-      :config
-       (key-chord-mode 1)
-      (setq key-chord-two-keys-delay 0.08)
-      ;;(key-chord-define meow-insert-state-keymap "uu" 'meow-normal-mode)
-      (key-chord-define-global "xs" 'save-buffer)
-      (key-chord-define-global "nw" 'ace-window))
+(fset 'yes-or-no-p 'y-or-n-p)
+(use-package key-chord
+  :config
+  (key-chord-mode 1)
+  (setq key-chord-two-keys-delay 0.08)
+  (key-chord-define-global "xs" 'save-buffer)
+  (key-chord-define-global "nw" 'ace-window))
+(use-package undo-fu-session
+  :defer 3
+  :init
+  (undo-fu-session-global-mode))
 
-    ;; (use-package use-package-chords
-    ;;   :ensure t
-    ;;   :elpaca t
-    ;;   :config (key-chord-mode 1))
+(use-package avy
+  :commands (avy-with)
+  :config
+  (setq avy-all-windows 'all-frames)
+  (setq avy-style 'at)
+  (setq avy-highlight-first t)
+  (setq avy-styles-alist '((avy-goto-char . at)
+                           (avy-goto-line . at-full)))
 
-    (use-package undo-fu-session
-      :defer 3
-      ;; :ensure t
-      ;; :elpaca t
-      :init
-      (undo-fu-session-global-mode))
+  (defun my/avy-goto-end-of-line (&optional arg)
+    "Call `avy-goto-end-of-line' but chang avy-styles-alist before and after."
+    (interactive "p")
+    (setq avy-styles-alist '((avy-goto-char . at)
+                             (avy-goto-line . post)))
+    (avy-goto-line arg)
+    (end-of-line)
+    (setq avy-styles-alist '((avy-goto-char . at)
+                             (avy-goto-line . at-full))))
 
-    (use-package avy
-      ;; :elpaca t
-      :commands (avy-with)
-      ;; :bind (("C-c v" . avy-goto-char)
-      ;;        ("C-c n n" . avy-goto-line)
-      ;;        ("C-c n w" . avy-goto-word-1)
-      ;;        ("C-c n e" . my/avy-goto-end-of-line))
-      ;; :chords (("vl" . avy-goto-line)
-      ;;          ("vn" . my/avy-goto-end-of-line)
-      ;;          ("vv" . avy-goto-word-1))
-      :config
-      (setq avy-all-windows 'all-frames)
-      (setq avy-style 'at)
-      (setq avy-highlight-first t)
-      (setq avy-styles-alist '((avy-goto-char . at)
-                               (avy-goto-line . at-full)))
+  (defcustom my/smart-avy-goto-char-alist
+    '((?\C-n . avy-goto-line)
+      (?\C-e . avy-goto-end-of-line)
+      (?\C-o . avy-goto-open-brackets)
+      (?\C-r . avy-copy-region))
+    "Alist of avy commands and keys")
 
-      (defun my/avy-goto-end-of-line (&optional arg)
-        "Call `avy-goto-end-of-line' but chang avy-styles-alist before and after."
-        (interactive "p")
-        (setq avy-styles-alist '((avy-goto-char . at)
-                                 (avy-goto-line . post)))
-        (avy-goto-line arg)
-        (end-of-line)
-        (setq avy-styles-alist '((avy-goto-char . at)
-                                 (avy-goto-line . at-full))))
-
-      ;; (setq avy-keys '(?h ?n ?e ?i ?r ?s ?t ?d))
-
-      (defcustom my/smart-avy-goto-char-alist
-        '((?\C-n . avy-goto-line)
-          (?\C-e . avy-goto-end-of-line)
-          (?\C-o . avy-goto-open-brackets)
-          (?\C-r . avy-copy-region))
-        "Alist of avy commands and keys")
-
-      (defun my/smart-avy-goto-char (char &optional arg)
-        "Uses an alist to determine if it is running avy-goto-char or a different avy command"
-        (interactive "c")
-        (let ((command (alist-get char my/smart-avy-goto-char-alist)))
-          (if command
-              (call-interactively command)
-            (avy-goto-char char)))))
+  (defun my/smart-avy-goto-char (char &optional arg)
+    "Uses an alist to determine if it is running avy-goto-char or a different avy command"
+    (interactive "c")
+    (let ((command (alist-get char my/smart-avy-goto-char-alist)))
+      (if command
+          (call-interactively command)
+        (avy-goto-char char)))))
 
 
-    (use-package crux
-      ;; :ensure t
-      ;; :elpaca t
-      :general
-      (:states '(normal visual insert)
-               "C-a"  #'crux-move-beginning-of-line)
-      ;; :bind (:map tyrant-map
-
-      ;;             ("b c" .  crux-cleanup-buffer-or-region)
-      ;;             )
-
-             ;; "SPC b s"  #'crux-sudo-edit)
-      )
-             ;; ("C-o" . crux-smart-open-line)
-             ;; ("C-c b s" . crux-sudo-edit)
-             ;; ("C-c b c" . crux-cleanup-buffer-or-region)
-             ;; ("C-S-o" . crux-smart-open-line-above)
-             ;; ("M-o" . crux-other-window-or-switch-buffer)))
-
+(use-package crux
+  :general
+  (:states '(normal visual insert)
+           "C-a"  #'crux-move-beginning-of-line))
 #+END_SRC
 
 * keybinding modes
 #+BEGIN_SRC emacs-lisp
 
-  (use-package which-key
-    ;; :elpaca t
-    :defer 2
-    :init (which-key-mode)
-    ;;(which-key-enable-god-mode-support)
-    :diminish which-key-mode
-    :config
-    (setq which-key-idle-delay 1.0))
+(use-package which-key
+  :defer 2
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 1.0))
 
-  (defun match-paren (arg)
-    "Go to the matching paren if on a paren; otherwise insert %."
-    (interactive "p")
-    (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-          ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-          (t (self-insert-command (or arg 1)))))
+(defun match-paren (arg)
+  "Go to the matching paren if on a paren; otherwise insert %."
+  (interactive "p")
+  (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+        ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+        (t (self-insert-command (or arg 1)))))
 
-  (use-package anzu
-    :ensure t
-    ;; :elpaca t
-    :commands (anzu-query-replace-at-cursor)
-    :config
-    (global-anzu-mode +1)
-    (custom-set-variables
-     '(anzu-mode-lighter "")
-     '(anzu-replace-to-string-separator " => "))
+(use-package anzu
+  :ensure t
+  :commands (anzu-query-replace-at-cursor)
+  :config
+  (global-anzu-mode +1)
+  (custom-set-variables
+   '(anzu-mode-lighter "")
+   '(anzu-replace-to-string-separator " => "))
 
-    (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-    (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp))
+  (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
+  (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp))
 
-  (use-package ace-window
-    :ensure t
-    ;; :elpaca t
-    :bind (("C-c w a" . ace-window))
-    :config
-(setq aw-keys '(?j ?k ?l ?a ?s ?d ?f ?g ?h ))
-    (custom-set-faces
-     '(aw-leading-char-face
-       ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
+(use-package ace-window
+  :ensure t
+  :bind (("C-c w a" . ace-window))
+  :config
+  (setq aw-keys '(?j ?k ?l ?a ?s ?d ?f ?g ?h ))
+  (custom-set-faces
+   '(aw-leading-char-face
+     ((t (:foreground "#1f2430" :background "#f28779" :height 3.0)))))
 
-    (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
-    (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face)))
+  (set-face-foreground 'aw-leading-char-face (face-foreground 'avy-lead-face))
+  (set-face-background 'aw-leading-char-face (face-background 'avy-lead-face)))
 
-  (use-package puni
-    :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square my/puni-wrap-single-quote
-                               my/puni-wrap-double-quote my/puni-wrap-angle
-                               my/puni-wrap-grave my/puni-html-wrap)
-    :bind (("C-<" . puni-barf-backward)
-           ("C-}" . puni-barf-forward)
-           ("C-(" . puni-slurp-backward)
-           ("C->" . puni-slurp-forward))
-    :config
-    (defun my/puni-wrap-single-quote (&optional n)
-      (interactive "P")
-      (puni-wrap-next-sexps
-       (puni--parse-interactive-argument-for-wrap n)
-       "'" "'"))
-    (defun my/puni-wrap-double-quote (&optional n)
-      (interactive "P")
-      (puni-wrap-next-sexps
-       (puni--parse-interactive-argument-for-wrap n)
-       "\"" "\""))
-    (defun my/puni-wrap-grave (&optional n)
-      (interactive "P")
-      (puni-wrap-next-sexps
-       (puni--parse-interactive-argument-for-wrap n)
-       "`" "`"))
-    (defun my/puni-html-wrap (html-element)
-      (interactive "sElement:")
-      ;; (message "%s" html-element)
-      (puni-wrap-next-sexps (puni--parse-interactive-argument-for-wrap 0)
-                            (format "<%s>" html-element) (format "</%s>" html-element)))
+(use-package puni
+  :commands (puni-wrap-angle puni-wrap-round puni-wrap-curly puni-wrap-square my/puni-wrap-single-quote
+                             my/puni-wrap-double-quote my/puni-wrap-angle
+                             my/puni-wrap-grave my/puni-html-wrap)
+  :bind (("C-<" . puni-barf-backward)
+         ("C-}" . puni-barf-forward)
+         ("C-(" . puni-slurp-backward)
+         ("C->" . puni-slurp-forward))
+  :config
+  (defun my/puni-wrap-single-quote (&optional n)
+    (interactive "P")
+    (puni-wrap-next-sexps
+     (puni--parse-interactive-argument-for-wrap n)
+     "'" "'"))
+  (defun my/puni-wrap-double-quote (&optional n)
+    (interactive "P")
+    (puni-wrap-next-sexps
+     (puni--parse-interactive-argument-for-wrap n)
+     "\"" "\""))
+  (defun my/puni-wrap-grave (&optional n)
+    (interactive "P")
+    (puni-wrap-next-sexps
+     (puni--parse-interactive-argument-for-wrap n)
+     "`" "`"))
+  (defun my/puni-html-wrap (html-element)
+    (interactive "sElement:")
+    ;; (message "%s" html-element)
+    (puni-wrap-next-sexps (puni--parse-interactive-argument-for-wrap 0)
+                          (format "<%s>" html-element) (format "</%s>" html-element))))
 
-    )
+(use-package hydra
+  :defer t
+  :ensure t)
 
-  (use-package hydra
-    :defer t
-      ;; :elpaca t
-    :ensure t)
+(use-package useful-hydras
+  :ensure nil
+  :commands (hydra-flycheck/flycheck-next-error avy-goto-xah-open hydra-avy/body)
+  :bind (("C-c x t" . hydra-bracket-mov/body)
+         ("C-c x d" . hydra-diff-hl/body)
+         ("C-c x x" . hydra-buffer-file/body)))
 
-  (use-package useful-hydras
-    ;; :elpaca nil
-    :ensure nil
-    :commands (hydra-flycheck/flycheck-next-error avy-goto-xah-open hydra-avy/body)
-    :bind (("C-c x t" . hydra-bracket-mov/body)
-           ("C-c x d" . hydra-diff-hl/body)
-           ("C-c x x" . hydra-buffer-file/body)))
-
-  (defun kmacro-toggle-start-end ()
-    "Starts kmacro unless one is already in progress than it ends it"
-    (interactive)
-    (if defining-kbd-macro
-        (kmacro-end-macro 1)
-      (kmacro-start-macro 0)))
+(defun kmacro-toggle-start-end ()
+  "Starts kmacro unless one is already in progress than it ends it"
+  (interactive)
+  (if defining-kbd-macro
+      (kmacro-end-macro 1)
+    (kmacro-start-macro 0)))
 
 #+END_SRC
 
 * Defaults
 #+BEGIN_SRC emacs-lisp
   (setq make-backup-files nil
+        auto-save-default nil
         next-screen-context-lines 5
         native-comp-async-report-warnings-errors nil
         isearch-lazy-count t
         lazy-count-prefix-format nil
         lazy-count-suffix-format "   (%s/%s)")
 
+  ;; prevent mouse actions minimizing text
+  (global-set-key (kbd "<pinch>") 'ignore)
+  (global-set-key (kbd "<C-wheel-up>") 'ignore)
+  (global-set-key (kbd "<C-wheel-down>") 'ignore)
+
   (use-package miniedit
-    ;; :elpaca t
     :ensure t)
 
   (use-package imenu
     :ensure nil
-    ;; :elpaca nil
     :custom
     (imenu-auto-rescan t)
     (imenu-max-items nil))
@@ -389,280 +404,266 @@
   (setq-default show-trailing-whitespace nil)
 
   (use-package winner
-    ;; :elpaca nil
     :config
     (winner-mode 1)
     :bind (("C-c w /" . winner-undo)
            ("C-c w _" . winner-redo)))
 
-  ;; (use-package vterm
-  ;;   ;; :elpaca t
-  ;;   :defer 5)
-
   (use-package undo-tree
     :defer 5
-    ;; :elpaca t
     :config
     (global-undo-tree-mode)
     (setq undo-tree-auto-save-history nil))
 
   (use-package rg
-    ;; :elpaca t
     :defer 9)
 #+END_SRC
 
 * Dired
 #+BEGIN_SRC emacs-lisp
-  (use-package dirvish
-      ;; :elpaca t
-    :init
-    (dirvish-override-dired-mode)
-    :custom
-    (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
-     '(("h" "~/"                          "Home")
-       ("d" "~/Downloads/"                "Downloads")))
-    :config
-    ;; (dirvish-peek-mode) ; Preview files in minibuffer
-    ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
-    (setq dirvish-mode-line-format
-          '(:left (sort symlink) :right (omit yank index)))
-    (setq dirvish-attributes
-          '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
-    (setq delete-by-moving-to-trash t)
-    (setq dired-listing-switches
-          "-l --almost-all --human-readable --group-directories-first --no-group")
-    :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
-    (("C-c d f" . dirvish-fd)
-     ("C-c d d" . dirvish-dwm)
-     ("C-c d t" . dirvish-side)
-     :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
-     ("a"   . dirvish-quick-access)
-     ("f"   . dirvish-file-info-menu)
-     ("y"   . dirvish-yank-menu)
-     ("N"   . dirvish-narrow)
-     ("^"   . dirvish-history-last)
-     ("h"   . dirvish-history-jump) ; remapped `describe-mode'
-     ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
-     ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
-     ("TAB" . dirvish-subtree-toggle)
-     ("M-f" . dirvish-history-go-forward)
-     ("M-b" . dirvish-history-go-backward)
-     ("M-l" . dirvish-ls-switches-menu)
-     ("M-m" . dirvish-mark-menu)
-     ("M-t" . dirvish-layout-toggle)
-     ("M-s" . dirvish-setup-menu)
-     ("M-e" . dirvish-emerge-menu)
-     ("M-j" . dirvish-fd-jump)
-     ("j" . dired-goto-file)
-     ("k" . dired-do-kill-lines)
-     ))
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")))
+  :config
+  ;; (dirvish-peek-mode) ; Preview files in minibuffer
+  ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  (setq dirvish-attributes
+        '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+  (setq delete-by-moving-to-trash t)
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --group-directories-first --no-group")
+  :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c d f" . dirvish-fd)
+   ("C-c d d" . dirvish-dwm)
+   ("C-c d t" . dirvish-side)
+   :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+   ("a"   . dirvish-quick-access)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+   ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+   ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+   ("TAB" . dirvish-subtree-toggle)
+   ("M-f" . dirvish-history-go-forward)
+   ("M-b" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ("M-t" . dirvish-layout-toggle)
+   ("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)
+   ("j" . dired-goto-file)
+   ("k" . dired-do-kill-lines)
+   ))
 #+END_SRC
 * eshell
 #+BEGIN_SRC emacs-lisp
-  ;;largely taken from system crafters but modified to my tasts
-  (defun read-file (file-path)
-    (with-temp-buffer
-      (insert-file-contents file-path)
-      (buffer-string)))
+;;largely taken from system crafters but modified to my tasts
+(defun read-file (file-path)
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (buffer-string)))
 
-  (defun dw/get-current-package-version ()
-    (interactive)
-    (let ((package-json-file (concat (eshell/pwd) "/package.json")))
-      (when (file-exists-p package-json-file)
-        (let* ((package-json-contents (read-file package-json-file))
-               (package-json (ignore-errors (json-parse-string package-json-contents))))
-          (when package-json
-            (ignore-errors (gethash "version" package-json)))))))
+(defun dw/get-current-package-version ()
+  (interactive)
+  (let ((package-json-file (concat (eshell/pwd) "/package.json")))
+    (when (file-exists-p package-json-file)
+      (let* ((package-json-contents (read-file package-json-file))
+             (package-json (ignore-errors (json-parse-string package-json-contents))))
+        (when package-json
+          (ignore-errors (gethash "version" package-json)))))))
 
-  (defun dw/map-line-to-status-char (line)
-    (cond ((string-match "^?\\? " line) "?")))
+(defun dw/map-line-to-status-char (line)
+  (cond ((string-match "^?\\? " line) "?")))
 
-  (defun dw/get-git-status-prompt ()
-    (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
-      (seq-uniq (seq-filter 'identity (mapcar 'dw/map-line-to-status-char status-lines)))))
+(defun dw/get-git-status-prompt ()
+  (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
+    (seq-uniq (seq-filter 'identity (mapcar 'dw/map-line-to-status-char status-lines)))))
 
-  (defun dw/get-prompt-path ()
-    (let* ((current-path (eshell/pwd))
-           (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
-           (has-path (not (string-match "^fatal" git-output))))
-      (if (not has-path)
-          (abbreviate-file-name current-path)
-        (string-remove-prefix (file-name-directory git-output) current-path))))
+(defun dw/get-prompt-path ()
+  (let* ((current-path (eshell/pwd))
+         (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
+         (has-path (not (string-match "^fatal" git-output))))
+    (if (not has-path)
+        (abbreviate-file-name current-path)
+      (string-remove-prefix (file-name-directory git-output) current-path))))
 
-  ;; This prompt function mostly replicates my custom zsh prompt setup
-  ;; that is powered by github.com/denysdovhan/spaceship-prompt.
-  (defun dw/eshell-prompt ()
-    (let ((current-branch (magit-get-current-branch))
-          (package-version (dw/get-current-package-version)))
-      (concat
-       "\n"
-       (propertize (system-name) 'face `(:foreground "#87af87"))
-       (propertize "  " 'face `(:foreground "#d3a0bc"))
-       (propertize (dw/get-prompt-path) 'face `(:foreground "#e39b7b"))
-       (when current-branch
-         (concat
-          (propertize " • " 'face `(:foreground "#d3a0bc"))
-          (propertize (concat " " current-branch) 'face `(:foreground "#e68183"))))
-       (when package-version
-         (concat
-          (propertize " @ " 'face `(:foreground "#d3a0bc"))
-          (propertize package-version 'face `(:foreground "#e8a206"))))
-       (propertize " • " 'face `(:foreground "#d3a0bc"))
-       (propertize (format-time-string "%I:%M:%S %p") 'face `(:foreground "#5b5b5b"))
-       (if (= (user-uid) 0)
-           (propertize "\n#" 'face `(:foreground "red2"))
-         (propertize "\nλ" 'face `(:foreground "#89beba")))
-       (propertize " " 'face `(:foreground "#d9bb80")))))
+;; This prompt function mostly replicates my custom zsh prompt setup
+;; that is powered by github.com/denysdovhan/spaceship-prompt.
+(defun dw/eshell-prompt ()
+  (let ((current-branch (magit-get-current-branch))
+        (package-version (dw/get-current-package-version)))
+    (concat
+     "\n"
+     (propertize (system-name) 'face `(:foreground "#87af87"))
+     (propertize "  " 'face `(:foreground "#d3a0bc"))
+     (propertize (dw/get-prompt-path) 'face `(:foreground "#e39b7b"))
+     (when current-branch
+       (concat
+        (propertize " • " 'face `(:foreground "#d3a0bc"))
+        (propertize (concat " " current-branch) 'face `(:foreground "#e68183"))))
+     (when package-version
+       (concat
+        (propertize " @ " 'face `(:foreground "#d3a0bc"))
+        (propertize package-version 'face `(:foreground "#e8a206"))))
+     (propertize " • " 'face `(:foreground "#d3a0bc"))
+     (propertize (format-time-string "%I:%M:%S %p") 'face `(:foreground "#5b5b5b"))
+     (if (= (user-uid) 0)
+         (propertize "\n#" 'face `(:foreground "red2"))
+       (propertize "\nλ" 'face `(:foreground "#89beba")))
+     (propertize " " 'face `(:foreground "#d9bb80")))))
 
-    (use-package xterm-color
-      ;; :elpaca t
-      )
+(use-package xterm-color
+  )
 
-  (defun dw/eshell-configure ()
+(defun dw/eshell-configure ()
 
-    (push 'eshell-tramp eshell-modules-list)
-    (push 'xterm-color-filter eshell-preoutput-filter-functions)
-    (delq 'eshell-handle-ansi-color eshell-output-filter-functions)
+  (push 'eshell-tramp eshell-modules-list)
+  (push 'xterm-color-filter eshell-preoutput-filter-functions)
+  (delq 'eshell-handle-ansi-color eshell-output-filter-functions)
 
-    ;; Save command history when commands are entered
-    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
 
-    (add-hook 'eshell-before-prompt-hook
-              (lambda ()
-                (setq xterm-color-preserve-properties t)))
+  (add-hook 'eshell-before-prompt-hook
+            (lambda ()
+              (setq xterm-color-preserve-properties t)))
 
-    ;; Truncate buffer for performance
-    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 
-    ;; We want to use xterm-256color when running interactive commands
-    ;; in eshell but not during other times when we might be launching
-    ;; a shell command to gather its output.
-    (add-hook 'eshell-pre-command-hook
-              (lambda () (setenv "TERM" "xterm-256color")))
-    (add-hook 'eshell-post-command-hook
-              (lambda () (setenv "TERM" "dumb")))
+  ;; We want to use xterm-256color when running interactive commands
+  ;; in eshell but not during other times when we might be launching
+  ;; a shell command to gather its output.
+  (add-hook 'eshell-pre-command-hook
+            (lambda () (setenv "TERM" "xterm-256color")))
+  (add-hook 'eshell-post-command-hook
+            (lambda () (setenv "TERM" "dumb")))
 
-    ;; Use completion-at-point to provide completions in eshell
-    (define-key eshell-mode-map (kbd "<tab>") 'completion-at-point)
+  ;; Use completion-at-point to provide completions in eshell
+  (define-key eshell-mode-map (kbd "<tab>") 'completion-at-point)
 
-    ;; Initialize the shell history
-    (eshell-hist-initialize)
+  ;; Initialize the shell history
+  (eshell-hist-initialize)
 
 
-    (setenv "PAGER" "cat")
+  (setenv "PAGER" "cat")
 
-    (setq eshell-prompt-function      'dw/eshell-prompt
-          eshell-prompt-regexp        "^λ "
-          eshell-history-size         10000
-          eshell-buffer-maximum-lines 10000
-          eshell-hist-ignoredups t
-          eshell-highlight-prompt t
-          eshell-scroll-to-bottom-on-input t
-          eshell-prefer-lisp-functions nil))
+  (setq eshell-prompt-function      'dw/eshell-prompt
+        eshell-prompt-regexp        "^λ "
+        eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-highlight-prompt t
+        eshell-scroll-to-bottom-on-input t
+        eshell-prefer-lisp-functions nil))
 
-  (use-package eshell
-      ;; :elpaca nil
-    :bind (("C-c o e" . eshell))
-    :hook (eshell-first-time-mode . dw/eshell-configure)
-    :init
-    (setq eshell-directory-name "~/.dotfiles/.emacs.d/eshell/"))
+(use-package eshell
+  :bind (("C-c o e" . eshell))
+  :hook (eshell-first-time-mode . dw/eshell-configure)
+  :config
+  ;;needed for shell prompt above
+  (require 'magit)
+  :init
+  (setq eshell-directory-name "~/.dotfiles/.emacs.d/eshell/"))
 
-  (use-package eshell-z
-    :ensure t
-    ;; :elpaca t
-    :after (eshell)
-    :hook ((eshell-mode . (lambda () (require 'eshell-z)))
-           (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
+(use-package eshell-z
+  :ensure t
+  :after (eshell)
+  :hook ((eshell-mode . (lambda () (require 'eshell-z)))
+         (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
 
-  (use-package exec-path-from-shell
-    :ensure t
-    ;; :elpaca t
-    :after (eshell)
-    :init
-    (setq exec-path-from-shell-check-startup-files nil)
-    :config
-    (when (memq window-system '(mac ns x))
-      (exec-path-from-shell-initialize)))
+(use-package exec-path-from-shell
+  :ensure t
+  :after (eshell)
+  :init
+  (setq exec-path-from-shell-check-startup-files nil)
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 #+END_SRC
 
 * Tramp/SSH
 #+BEGIN_SRC emacs-lisp
-  (use-package my-ssh-helpers
-    ;; :elpaca nil
-    :ensure nil
-    :bind (("C-c c s" . my/ssh-into)))
+(use-package my-ssh-helpers
+  :ensure nil
+  :bind (("C-c c s" . my/ssh-into)))
 
-  (use-package tramp
-        ;; :elpaca nil
-    :bind (("C-c c t c" . tramp-cleanup-all-buffers)))
+(use-package tramp
+  :bind (("C-c c t c" . tramp-cleanup-all-buffers)))
 #+END_SRC
 
 * Process
 #+BEGIN_SRC emacs-lisp
-  (use-package proced
-        ;; :elpaca nil
-    :bind (("C-c e p" . proced)))
+(use-package proced
+  :ensure nil
+  :bind (("C-c e p" . proced))
+  :config
+  (setq proced-enable-color-flag t) ; Emacs 29
+  (setq proced-auto-update-interval 5)
+  (setq proced-descend t))
 #+END_SRC
 
 * Docker
 #+BEGIN_SRC emacs-lisp
-  (use-package docker
-    :ensure t
-    ;; :elpaca t
-    :bind (("C-c o d" . docker)
-           ("C-c c i" . docker-images)
-           ("C-c c c" . docker-containers)
-           ("C-c c f" . docker-container-find-file)))
+(use-package docker
+  :ensure t
+  :bind (("C-c o d" . docker)
+         ("C-c c i" . docker-images)
+         ("C-c c c" . docker-containers)
+         ("C-c c f" . docker-container-find-file)))
 #+END_SRC
 * Nginx
 #+BEGIN_SRC emacs-lisp
-  (use-package nginx-mode
-    :ensure t
-    ;; :elpaca t
-    :defer 20)
+(use-package nginx-mode
+  :ensure t
+  :defer 20)
 #+END_SRC
 
 * projects
 #+BEGIN_SRC emacs-lisp
-  (use-package project
-        ;; :elpaca nil
-    :defer t)
+(use-package project
+  :defer t)
 #+END_SRC
 
 * Git
 #+BEGIN_SRC emacs-lisp
-  (use-package magit
-    :ensure t
-    ;; :elpaca t
-    :bind (("C-c g g" . magit-status)
-           ("C-c g b" . magit-branch-checkout)
-           ("C-c g c" . magit-branch-and-checkout))
-    :commands (magit-status magit-get-current-branch)
-    :custom
-    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+(use-package magit
+  :ensure t
+  :bind (("C-c g g" . magit-status)
+         ("C-c g b" . magit-branch-checkout)
+         ("C-c g c" . magit-branch-and-checkout))
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-  (use-package diff-hl
-    ;; :elpaca t
-    :after (magit)
-    :ensure t
-    ;; :elpaca t
-    :init
-    (global-diff-hl-mode)
-    :config
-    ;; remove the revert from the repeat map
-    (keymap-unset diff-hl-command-map (kbd "n") 'remove))
+(use-package diff-hl
+  :after (magit)
+  :ensure t
+  :init
+  (global-diff-hl-mode)
+  :config
+  ;; remove the revert from the repeat map
+  (keymap-unset diff-hl-command-map (kbd "n") 'remove))
 
-  (use-package git-timemachine
-    :ensure t
-    ;; :elpaca t
-    :bind (("C-c g t" . git-timemachine)))
+(use-package git-timemachine
+  :ensure t
+  :bind (("C-c g t" . git-timemachine)))
 #+END_SRC
 
 * emacs completion frameworks
 #+BEGIN_SRC emacs-lisp
   (defun dw/minibuffer-backward-kill (arg)
     "When minibuffer is completing a file name delete up to parent
-                                    folder, otherwise delete a word"
+                                      folder, otherwise delete a word"
     (interactive "p")
     (if minibuffer-completing-file-name
         ;; Borrowed from/modified https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
@@ -676,7 +677,6 @@
   (use-package vertico
     :defer 1
     :ensure t
-    ;; :elpaca t
     :bind (:map minibuffer-local-map
                 ("DEL" . dw/minibuffer-backward-kill)
                 :map vertico-map
@@ -687,25 +687,24 @@
     :init
     (vertico-mode)
     :bind (:map vertico-map
-           ("C-j" . vertico-next)) 
+                ("C-j" . vertico-next))
     :config
     ;; (setq vertico-quick1 "neiorst")
     ;; (setq vertico-quick2 "neio")
 
-    (defface vertico-quick1
-      '((((class color) (min-colors 88) (background dark))
-         :background "#d9bb80" :foreground "#2a2426" :inherit bold)
-        (t :background "red" :foreground "white" :inherit bold))
-      "Face used for the first quick key."
-      :group 'vertico-faces)
+    ;; (defface vertico-quick1
+    ;;   '((((class color) (min-colors 88) (background dark))
+    ;;      :background "#d9bb80" :foreground "#2a2426" :inherit bold)
+    ;;     (t :background "red" :foreground "white" :inherit bold))
+    ;;   "Face used for the first quick key."
+    ;;   :group 'vertico-faces)
 
-
-    (defface vertico-quick2
-      '((((class color) (min-colors 88) (background dark))
-         :background "#e4cfa6" :foreground "#2a2426" :inherit bold)
-        (t :background "magenta" :foreground "white" :inherit bold))
-      "Face used for the second quick key."
-      :group 'vertico-faces)
+    ;; (defface vertico-quick2
+    ;;   '((((class color) (min-colors 88) (background dark))
+    ;;      :background "#e4cfa6" :foreground "#2a2426" :inherit bold)
+    ;;     (t :background "magenta" :foreground "white" :inherit bold))
+    ;;   "Face used for the second quick key."
+    ;;   :group 'vertico-faces)
 
     (defvar vertico-repeat-map
       (let ((map (make-sparse-keymap)))
@@ -717,7 +716,6 @@
 
   ;; (use-package vertico-posframe
   ;;   :ensure t
-  ;;   ;; :elpaca t
   ;;   :after (vertico)
   ;;   :init (vertico-posframe-mode 1)
   ;;   :config
@@ -739,7 +737,6 @@
 
   (use-package orderless
     :ensure t
-    ;; :elpaca t
     :custom
     (completion-styles '(orderless basic))
     (completion-category-overrides '((file (styles basic partial-completion)))))
@@ -757,7 +754,6 @@
   (use-package marginalia
     :after (vertico)
     :ensure t
-    ;; :elpaca t
     :config
     (marginalia-mode))
 
@@ -765,7 +761,6 @@
 
   (use-package embark
     :ensure t
-    ;; :elpaca t
     :bind
     (("C-," . embark-act)         ;; pick some comfortable binding
      ("C-c ," . embark-act)
@@ -777,9 +772,9 @@
 
     (defun embark-which-key-indicator ()
       "An embark indicator that displays keymaps using which-key.
-          The which-key help message will show the type and value of the
-          current target followed by an ellipsis if there are further
-          targets."
+            The which-key help message will show the type and value of the
+            current target followed by an ellipsis if there are further
+            targets."
       (lambda (&optional keymap targets prefix)
         (if (null keymap)
             (which-key--hide-popup-ignore-command)
@@ -828,7 +823,6 @@
   (use-package embark-consult
     :after (embark)
     :ensure t ; only need to install it, embark loads it after consult if found
-    ;; :elpaca t
     :hook
     (embark-collect-mode . consult-preview-at-point-mode))
 
@@ -836,69 +830,66 @@
 
 * searching
 #+BEGIN_SRC emacs-lisp
-  (use-package consult
-    ;; :elpaca t
-    :commands (consult-imenu consult-imenu-multi)
-    :bind (([remap imenu] . consult-imenu)
-           ("C-c s" . consult-line)
-           ([remap switch-to-buffer] . consult-buffer)
-           ([remap bookmark-jump] . consult-bookmark)
-           ("C-c f s" . consult-focus-lines)
+(use-package consult
+  :commands (consult-imenu consult-imenu-multi)
+  :bind (([remap imenu] . consult-imenu)
+         ("C-c s" . consult-line)
+         ([remap switch-to-buffer] . consult-buffer)
+         ([remap bookmark-jump] . consult-bookmark)
+         ("C-c f s" . consult-focus-lines)
 
-           ("C-c k s" . consult-yank-from-kill-ring)
-           ("C-c g s" . consult-git-grep)
+         ("C-c k s" . consult-yank-from-kill-ring)
+         ("C-c g s" . consult-git-grep)
 
-           :map isearch-mode-map
-           ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-           ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-           ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-           ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
-           :map minibuffer-local-map
-           ("C-r" . consult-history))
-    :config
-    (consult-customize
-     consult-buffer
-     ;; my/command-wrapping-consult    ;; disable auto previews inside my command
-     :preview-key "M-.")            ;; Option 2: Manual preview
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch        ("C-M-j" . persp-switch-to-buffer*)
+         :map minibuffer-local-map
+         ("C-r" . consult-history))
+  :config
+  (consult-customize
+   consult-buffer
+   ;; my/command-wrapping-consult    ;; disable auto previews inside my command
+   :preview-key "M-.")            ;; Option 2: Manual preview
 
-    (setq consult-narrow-key "<")
-        :custom
-    (consult-project-root-function #'dw/get-project-root)
-    (completion-in-region-function #'consult-completion-in-region))
+  (setq consult-narrow-key "<")
+  :custom
+  (consult-project-root-function #'dw/get-project-root)
+  (completion-in-region-function #'consult-completion-in-region))
 
-  (define-key isearch-mode-map (kbd "M-RET")
-              #'isearch-exit-other-end)
+(define-key isearch-mode-map (kbd "M-RET")
+            #'isearch-exit-other-end)
 
-  (defun isearch-exit-other-end ()
-    "Exit isearch, at the opposite end of the string.
+(defun isearch-exit-other-end ()
+  "Exit isearch, at the opposite end of the string.
         from https://endlessparentheses.com/leave-the-cursor-at-start-of-match-after-isearch.html"
-    (interactive)
-    (isearch-exit)
-    (goto-char isearch-other-end))
+  (interactive)
+  (isearch-exit)
+  (goto-char isearch-other-end))
 
 #+END_SRC
 
 * notes
 #+BEGIN_SRC emacs-lisp
-  (use-package denote
-        ;; :elpaca t
-    :bind (("C-c d m" . denote))
-    :config
-    (setq denote-allow-multi-word-keywords t)
-    (setq denote-known-keywords '("code" "history" "current-events"))
-    (setq denote-directory (expand-file-name "/home/isaac/denote/"))
-    (setq denote-file-type nil))
+(use-package denote
+  :bind (("C-c d m" . denote))
+  :config
+  (setq denote-allow-multi-word-keywords t)
+  (setq denote-known-keywords '("code" "history" "current-events"))
+  (setq denote-directory (expand-file-name "/home/isaac/denote/"))
+  (setq denote-file-type nil))
 
-  (use-package consult-notes
-    :ensure t
-    ;; :elpaca t
-    :bind (("C-c d s" . consult-notes))
-    :commands (consult-notes consult-notes-search-in-all-notes)
-    :config
-    (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
-    ;; Set org-roam integration OR denote integration, e.g.:
-    (when (locate-library "denote")
-      (consult-notes-denote-mode)))
+(use-package consult-notes
+  :ensure t
+  :bind (("C-c d s" . consult-notes))
+  :commands (consult-notes consult-notes-search-in-all-notes)
+  :config
+  (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
+  ;; Set org-roam integration OR denote integration, e.g.:
+  (when (locate-library "denote")
+    (consult-notes-denote-mode)))
 
 
 
@@ -906,140 +897,149 @@
 
 * Fennel
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package fennel-mode
-  ;;   :mode (("\\.fnl\\'" . fennel-mode))
-  ;;   :config
-  ;;   (setq fennel-program "~/.luarocks/bin/fennel --repl"))
+;; (use-package fennel-mode
+;;   :mode (("\\.fnl\\'" . fennel-mode))
+;;   :config
+;;   (setq fennel-program "~/.luarocks/bin/fennel --repl"))
 #+END_SRC
 
 * autocomplete
 #+BEGIN_SRC emacs-lisp
-    (use-package cape
-      :ensure t
-      ;; :elpaca t
-      :defer 10
-      :config
-      ;; Add `completion-at-point-functions', used by `completion-at-point'.
+(use-package cape
+  :ensure t
+  :defer 10
+  :config
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev) ;; Complete word from current buffers
+  (add-to-list 'completion-at-point-functions #'cape-file))
 
-      (add-to-list 'completion-at-point-functions #'cape-file))
+(defvar corfu-repeat-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "j") #'corfu-next)
+    (define-key map (kbd "k") #'corfu-previous)
+    map))
 
-    (defvar corfu-repeat-map
-      (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "j") #'corfu-next)
-        (define-key map (kbd "k") #'corfu-previous)
-        map))
+(dolist (cmd '(corfu-next corfu-previous))
+  (put cmd 'repeat-map 'corfu-repeat-map))
 
-    (dolist (cmd '(corfu-next corfu-previous))
-      (put cmd 'repeat-map 'corfu-repeat-map))
+(use-package corfu
+  :ensure t
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-auto-delay 0)
+  (corfu-auto-prefix 1)
+  :init
+  (global-corfu-mode)
+  :bind
+  (:map corfu-map (("C-j" . corfu-next)
+                   ("<" . corfu-quick-jump)
+                   ("M-i" . corfu-info-documentation)))
+  :config
+  ;; (setq corfu-quick1 "neiorst")
+  ;; (setq corfu-quick2 "neio")
+  )
 
-    (use-package corfu
-      :ensure t
-      ;; :elpaca t
-      ;; Optional customizations
-      :custom
-      (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-      (corfu-auto t)                 ;; Enable auto completion
-      (corfu-auto-delay 0)
-      (corfu-auto-prefix 1)
-      :init
-      (global-corfu-mode)
-      :bind
-      (:map corfu-map (("C-j" . corfu-next)
-                       ("<" . corfu-quick-jump)
-                       ("M-i" . corfu-info-documentation)))
-      :config
-          ;; (setq corfu-quick1 "neiorst")
-      ;; (setq corfu-quick2 "neio")
-      )
+(use-package emacs
+  :init
 
-    (use-package emacs
-          ;; :elpaca nil
-      :init
-      ;; TAB cycle if there are only few candidates
-      (setq completion-cycle-threshold 2)
-      ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-      ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-      ;; (setq read-extended-command-predicate
-      ;;       #'command-completion-default-include-p)
-      ;; Enable indentation+completion using the TAB key.
-      ;; `completion-at-point' is often bound to M-TAB.
-      (setq tab-always-indent 'complete))
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 2)
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
 
-      (use-package yasnippet
+(use-package yasnippet
   :init (yas-global-mode +1))
-    ;; (use-package yasnippet
-    ;;   :defer 10
-    ;;   :ensure t
-    ;;   ;; :elpaca t
-    ;;   ;; :hook (prog-mode . yas/minor-mode)
-    ;;   :config
-    ;;   (use-package yasnippet-snippets
-    ;;     :defer 15
+;; (use-package yasnippet
+;;   :defer 10
+;;   :ensure t
+;;   ;; :hook (prog-mode . yas/minor-mode)
+;;   :config
+;;   (use-package yasnippet-snippets
+;;     :defer 15
 
-    ;;     :ensure t
-    ;;     ;; :elpaca t
-    ;;     )
+;;     :ensure t
+;;     )
 
-    ;;   (yas-reload-all))
+;;   (yas-reload-all))
 
 #+END_SRC
 
 * org
 #+BEGIN_SRC emacs-lisp
-  (eval-after-load 'org-mode
-    (progn
-      (setq ispell-program-name "/usr/bin/hunspell")
-
-      (setq ispell-hunspell-dict-paths-alist
-
-            '(("en_US" "~/Library/Spelling/en_US.dic")))
-
-      ;;(setq ispell-local-dictionary "en_US")
-
-      ;; (setq ispell-local-dictionary-alist
-
-      ;; ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
-
-      ;; ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
-
-      ;; '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
 
 
-      (use-package org-bullets
-        ;; :elpaca t
-        :after org
-        :hook (org-mode . org-bullets-mode)
-        :custom
-        (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+(eval-after-load 'org-mode
+  (progn
+    (setq ispell-program-name "/usr/bin/hunspell")
 
-      ;; renames buffer when the name starts with title
-      (defun org+-buffer-name-to-title ()
-        "Rename buffer to value of #+title:."
-        (interactive)
-        (save-excursion
-          (goto-char (point-min))
-          (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
-            (rename-buffer (match-string 1)))))
-      (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
-      (setq cape-dict-file "/home/isaac/Library/Spelling/en_US.dic")
-      ;; Turn on indentation and auto-fill mode for Org files
-      (defun dw/org-mode-setup ()
-        (org-bullets-mode)
-        (org-indent-mode)
-        (auto-fill-mode 0)
-        (visual-line-mode 1)
-        (add-to-list 'completion-at-point-functions #'cape-dict)
-        (org+-buffer-name-to-title))
+    (setq ispell-hunspell-dict-paths-alist
+
+          '(("en_US" "~/Library/Spelling/en_US.dic")))
+
+    ;;(setq ispell-local-dictionary "en_US")
+
+    ;; (setq ispell-local-dictionary-alist
+
+    ;; ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
+
+    ;; ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+
+    ;; '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
+
+
+    ;; (use-package org-bullets
+    ;;   :after org
+    ;;   :hook (org-mode . org-bullets-mode)
+    ;;   :custom
+    ;;   (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+    ;; renames buffer when the name starts with title
+    (defun org+-buffer-name-to-title ()
+      "Rename buffer to value of #+title:."
+      (interactive)
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+          (rename-buffer (match-string 1)))))
+    (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+    (setq cape-dict-file "/home/isaac/Library/Spelling/en_US.dic")
+    ;; Turn on indentation and auto-fill mode for Org files
+    (defun dw/org-mode-setup ()
+      ;; (org-bullets-mode)
+      (org-modern-mode +1)
+      (org-indent-mode)
+      (auto-fill-mode 0)
+      (visual-line-mode 1)
+      (add-to-list 'completion-at-point-functions #'cape-dict)
+      (org+-buffer-name-to-title))
+
+      (use-package org-modern
+        :ensure t)
+
+      (use-package org-agenda
+        :ensure nil
+        :config
+            (define-key org-agenda-mode-map (kbd "SPC") normal-tyrant-map)
+          (define-key org-agenda-mode-map (kbd "j") 'org-agenda-next-line)
+          (define-key org-agenda-mode-map (kbd "n") 'org-agenda-goto-date)
+          (define-key org-agenda-mode-map (kbd "k") 'org-agenda-previous-line)
+          (define-key org-agenda-mode-map (kbd "p") 'org-agenda-capture))
 
       (use-package org
-        ;; :elpaca nil
         :mode (("\\.org\\'" . org-mode))
         :hook (org-mode . dw/org-mode-setup)
         :config
-        (unbind-key "C-," org-mode-map)
-        (setq org-agenda-start-with-log-mode t)
-        (setq org-log-done `time)
-        (setq org-log-into-drawer t))
+          (unbind-key "C-," org-mode-map)
+          (setq org-agenda-start-with-log-mode t)
+          (setq org-log-done `time)
+          (setq org-log-into-drawer t))
       ))
 
 #+END_SRC
@@ -1048,7 +1048,6 @@
 #+BEGIN_SRC emacs-lisp
 
     (use-package openwith
-      ;; :elpaca t
       :defer 10
       :config
       (when (require 'openwith nil 'noerror)
@@ -1064,7 +1063,6 @@
 
   (use-package zoxide
     :ensure t
-    ;; :elpaca t
     :bind (("C-c z" . zoxide-find-file)))
 #+END_SRC
 
@@ -1075,7 +1073,6 @@
   ;;                                  (message "ran")))
 
   (use-package pdf-tools
-    ;; :elpaca t
     :defer 10)
 
   (add-hook 'pdf-view-mode-hook
@@ -1085,7 +1082,6 @@
 
   (use-package nov
     :ensure t
-    ;; :elpaca t
     :mode (("\\.epub\\'" . nov-mode))
     :config
     (setq nov-text-width t)
@@ -1100,7 +1096,6 @@
 * EWW
 #+BEGIN_SRC emacs-lisp
   (use-package eww
-  ;; :elpaca nil
     :bind ("C-x w" . eww)
     :config
     (setq eww-auto-rename-buffer 'title))
@@ -1113,7 +1108,6 @@
         :bind ("C-c e t" . treemacs))
 
     (use-package hideshow
-      ;; :elpaca nil
       :ensure nil
       :hook
       ((org-mode . hs-minor-mode))
@@ -1141,7 +1135,6 @@
     :hook (prog-mode . rainbow-mode))
 
   (use-package whitespace
-  ;; :elpaca nil
     :bind (("C-c e w" . whitespace-mode)))
 #+END_SRC
 * Env
@@ -1171,16 +1164,16 @@
              ;; (prettier-js-mode . super-save-mode)
              ))
 
-    (add-hook 'js-mode-hook 'prettier-js-mode)
-    (add-hook 'web-mode-hook 'prettier-js-mode)
+    ;; (add-hook 'js-mode-hook 'prettier-js-mode)
+    ;; (add-hook 'web-mode-hook 'prettier-js-mode)
 
     (use-package rjsx-mode
       :mode ("\\.js\\'" . rjsx-mode)
       :ensure t)
 
-    (use-package web-mode
-      :ensure t
-      :after (rjsx-mode js2-mode))
+    ;; (use-package web-mode
+    ;;   :ensure t
+    ;;   :after (rjsx-mode js2-mode))
 
     (defun setup-tide-mode ()
       "Sets up tide"
@@ -1225,7 +1218,6 @@
 #+BEGIN_SRC emacs-lisp
   (use-package eglot
     :defer t
-    ;; :elpaca nil
     :ensure t
     :commands (eglot eglot-ensure)
     :config
@@ -1236,7 +1228,6 @@
   (setq completion-category-overrides '((eglot (styles orderless))))
 
   (use-package consult-eglot
-    ;; :elpaca t
     :after (eglot)
     :ensure t)
 
@@ -1284,7 +1275,6 @@
   (setenv "LSP_USE_PLISTS" "true")
 
   (use-package lsp-mode
-    ;; :elpaca t
     :commands lsp
     :hook ((
             web-mode
@@ -1347,32 +1337,30 @@
 #+END_SRC
 * Clojure
 #+BEGIN_SRC emacs-lisp
-  (use-package clojure-mode
-    ;; :elpaca t
-    :ensure t
-    :mode (("\\.clj\\'" . clojure-mode)
-           ("\\.edn\\'" . clojure-mode)))
+  ;; (use-package clojure-mode
+  ;;   :ensure t
+  ;;   :mode (("\\.clj\\'" . clojure-mode)
+  ;;          ("\\.edn\\'" . clojure-mode)))
 
-  (use-package cider
-    :ensure t
-    :after (clojure-mode)
-    :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
-    :diminish subword-mode
-    :config
-    (setq nrepl-log-messages t
-          cider-repl-display-in-current-window t
-          cider-repl-use-clojure-font-lock t
-          cider-prompt-save-file-on-load 'always-save
-          cider-font-lock-dynamically '(macro core function var)
-          nrepl-hide-special-buffers t
-          cider-overlays-use-font-lock t)
-    (cider-repl-toggle-pretty-printing))
+  ;; (use-package cider
+  ;;   :ensure t
+  ;;   :after (clojure-mode)
+  ;;   :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+  ;;   :diminish subword-mode
+  ;;   :config
+  ;;   (setq nrepl-log-messages t
+  ;;         cider-repl-display-in-current-window t
+  ;;         cider-repl-use-clojure-font-lock t
+  ;;         cider-prompt-save-file-on-load 'always-save
+  ;;         cider-font-lock-dynamically '(macro core function var)
+  ;;         nrepl-hide-special-buffers t
+  ;;         cider-overlays-use-font-lock t)
+  ;;   (cider-repl-toggle-pretty-printing))
 #+END_SRC
 
 * Common Lisp
 #+BEGIN_SRC emacs-lisp
   (use-package sly
-      ;; :elpaca t
     :mode (("\\.lisp\\'" . sly)))
 
 #+END_SRC
@@ -1380,14 +1368,12 @@
 * Lua
 #+BEGIN_SRC emacs-lisp
   (use-package lua-mode
-    ;; :elpaca t
     :mode (("\\.lua\\'" . lua-mode)))
 #+END_SRC
 
 * C
 #+BEGIN_SRC emacs-lisp
   ;; (use-package cc-mode
-  ;;   ;; :elpaca nil
   ;;   :mode (("\\.c\\'" . cc-mode)))
 #+END_SRC
 
