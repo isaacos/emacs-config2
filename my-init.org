@@ -1,195 +1,237 @@
 * Keybindings
 #+BEGIN_SRC emacs-lisp
-    ;;respect visual line is required prior to evil loading
-    (setq evil-respect-visual-line-mode t)
-    (use-package evil
-      :demand t
-      :bind (("<escape>" . keyboard-escape-quit))
-      :init
-      ;; allows for using cgn
-      (setq evil-want-minibuffer t)
-      (setq evil-disable-insert-state-bindings t)
-      (setq evil-want-keybinding nil)
-      ;; no vim insert bindings
-      (setq evil-undo-system 'undo-tree)
-      :config
-      (evil-mode 1)
-      (setq evil-insert-state-cursor '(hbar . 3)))
+      ;;respect visual line is required prior to evil loading
+      (setq evil-respect-visual-line-mode t)
+      (use-package evil
+        :demand t
+        :bind (("<escape>" . keyboard-escape-quit))
+        :init
+        ;; allows for using cgn
+        (setq evil-want-minibuffer t)
+        (setq evil-disable-insert-state-bindings t)
+        (setq evil-want-keybinding nil)
+        (setq evil-cross-lines t)
 
-    ;; Vim Bindings Everywhere else
-    (use-package evil-collection
-      :ensure t
-      :after evil
-      :config
-      (setq evil-want-integration t)
-      (evil-collection-init))
+        (setq evil-insert-state-cursor "#eb6f92")
+        (setq evil-normal-state-cursor  "#80e080")
+        (blink-cursor-mode -1)
+        ;; no vim insert bindings
+        (setq evil-undo-system 'undo-tree)
+        :config
+        (evil-mode 1))
 
-    (use-package general
-      :after (evil)
-      :config
-      (general-evil-setup)
-      (general-auto-unbind-keys)
-      (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map)
-                          "S-SPC" 'execute-extended-command-for-buffer
-                          "C-e" 'evil-end-of-line
-                          ;; "gs" '("avy-char" . avy-goto-char)
-                          ;; "gl" '("avy-line" . avy-goto-line)
-  )
-      (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
-      (general-define-key :keymaps 'evil-insert-state-map
-                          (general-chord "jk") 'evil-normal-state
-                          (general-chord "kj") 'evil-normal-state
-                          (general-chord "lj") 'avy-goto-line
-                          (general-chord "jl") 'avy-goto-line)
-      (general-define-key
-       :states '(normal motion)
-       :keymaps 'override
-       :prefix-map 'normal-tyrant-map
-       :prefix "SPC")
+      ;; Vim Bindings Everywhere else
+      (use-package evil-collection
+        :ensure t
+        :after evil
+        :config
+        (setq evil-want-integration t)
+        (evil-collection-init))
 
-      (general-define-key
-       :states '(emacs insert)
-       :keymaps 'override
-       :prefix-map 'normal-tyrant-map
-       :prefix "M-SPC")
+      (use-package general
+        :after (evil)
+        :config
+        (general-evil-setup)
+        (general-auto-unbind-keys)
+        (general-define-key :keymaps '(evil-normal-state-map evil-visual-state-map evil-operator-state-map)
+                            "s" 'avy-goto-char
+                            "S-SPC" 'execute-extended-command-for-buffer
+                            "C-e" 'evil-end-of-line)
+        (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+        (general-define-key :keymaps 'evil-insert-state-map
+                            (general-chord "jk") 'evil-normal-state
+                            (general-chord "kj") 'evil-normal-state
+                            (general-chord "lj") 'avy-goto-line
+                            (general-chord "jl") 'avy-goto-line)
+        (general-define-key
+         :states '(normal motion)
+         :keymaps 'override
+         :prefix-map 'normal-tyrant-map
+         :prefix "SPC")
 
-      (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
-      (my/normal-leader
-        "SPC" '("M-x" . execute-extended-command)
-        "b" (cons "bufs" (make-sparse-keymap))
-        "bk" '("kill" . kill-this-buffer)
-        "bb" '("switch" . consult-buffer)
-        "bc" '("clean" . crux-cleanup-buffer-or-region)
-        "be" '("eval" . eval-buffer)
-        "b." '("scratch" . scratch-buffer)
-        "bm" '("mini" . switch-to-minibuffer)
-        "bi" '("ibuffer" . ibuffer)
-        "bs" '("sudo" . crux-sudo-edit)
-        "bl" '("reload" . revert-buffer)
-        "br" '("rename" . rename-buffer)
+        (general-define-key
+         :states '(emacs insert)
+         :keymaps 'override
+         :prefix-map 'normal-tyrant-map
+         :prefix "M-SPC")
 
-        "B" '("proj-buffer" . consult-project-buffer)
+        (general-create-definer my/normal-leader :keymaps 'normal-tyrant-map)
+        (my/normal-leader
+          "SPC" '("M-x" . execute-extended-command)
+          "b" (cons "bufs" (make-sparse-keymap))
+          "bk" '("kill" . kill-this-buffer)
+          "bb" '("switch" . consult-buffer)
 
-        "d" (cons "denote" (make-sparse-keymap))
-        "dm" '("make" . denote)
-        "ds" '("search" . consult-notes)
+          "bc" '("clean" . crux-cleanup-buffer-or-region)
+          "be" '("eval" . eval-buffer)
+          "b." '("scratch" . scratch-buffer)
+          "bm" '("mini" . switch-to-minibuffer)
+          "bo" (cons "C-x 4" ctl-x-4-map)
+          "bi" '("ibuffer" . ibuffer)
+          "bs" '("sudo" . crux-sudo-edit)
+          "bl" '("reload" . revert-buffer)
+          "br" '("rename" . rename-buffer)
+          "b'" '("agenda" . org-cycle-agenda-files)
 
-        "e" (cons "emacs" (make-sparse-keymap))
-        "ee" '("eval" . eval-last-sexp)
-        "el" '("pack-list" . package-list-packages)
-        "er" '("restart" . restart-emacs)
-        "ek" '("kill" . kill-emacs)
+          "B" '("proj-buffer" . consult-project-buffer)
 
-        "f" (cons "file" (make-sparse-keymap))
-        "ff" '("find" . find-file)
-        "fs" '("save" . save-buffer)
+          "d" (cons "denote" (make-sparse-keymap))
+          "dm" '("make" . denote)
+          "ds" '("search" . consult-notes)
 
-        "g" (cons "git" (make-sparse-keymap))
-        "gg" '("status". magit-status)
-        "gb" '("checkout". magit-branch-checkout)
-        "gc" '("branch+checkout" . magit-branch-and-checkout)
-        "gs" '("grep" . consult-git-grep)
+          "e" (cons "emacs" (make-sparse-keymap))
+          "ee" '("eval" . eval-last-sexp)
+          "el" '("pack-list" . package-list-packages)
+          "er" '("restart" . restart-emacs)
+          "ek" '("kill" . kill-emacs)
 
-        "h" (cons "help" (make-sparse-keymap))
+          "f" (cons "file" (make-sparse-keymap))
+          "ff" '("find" . find-file)
+          "fs" '("save" . save-buffer)
+
+          "g" (cons "git" (make-sparse-keymap))
+          "gg" '("status". magit-status)
+          "gb" '("checkout". magit-branch-checkout)
+          "gc" '("branch+checkout" . magit-branch-and-checkout)
+          "gs" '("grep" . consult-git-grep)
+
+          "h" (cons "help" (make-sparse-keymap))
           "hk" '("key" . describe-key)
           "hv" '("variable" . describe-variable)
           "hf" '("func" . describe-function)
 
-        "i" (cons "imenu" (make-sparse-keymap))
-        "ii" '("imenu" . consult-imenu)
-        "im" '("imenu-multi" . consult-imenu-multi)
+          "i" (cons "imenu" (make-sparse-keymap))
+          "ii" '("imenu" . consult-imenu)
+          "im" '("imenu-multi" . consult-imenu-multi)
 
-        "j" (cons "jump" (make-sparse-keymap))
-        "jl" '("line" . avy-goto-line)
-        "je" '("e-line" . my/avy-goto-end-of-line)
-        "jj" '("char" . avy-goto-char)
-        "j;" '("open" . avy-goto-xah-open)
-        "jr" '("mark" . jump-to-register)
-        "j." '("set-mark" . point-to-register)
-        "jb" '("bookmark" . bookmark-jump)
-        "jB" '("bookmark-set" . bookmark-set)
+          "j" (cons "jump" (make-sparse-keymap))
+          "jl" '("line" . avy-goto-line)
+          "je" '("e-line" . my/avy-goto-end-of-line)
+          "jj" '("char" . avy-goto-char)
+          "j;" '("open" . avy-goto-xah-open)
+          "jr" '("mark" . jump-to-register)
+          "j." '("set-mark" . point-to-register)
+          "jb" '("bookmark" . bookmark-jump)
+          "jB" '("bookmark-set" . bookmark-set)
 
-        "k" (cons "kill" (make-sparse-keymap))
-        "ks" '("search" . consult-yank-from-kill-ring)
+          "k" (cons "kill" (make-sparse-keymap))
+          "ks" '("search" . consult-yank-from-kill-ring)
+          "kl" '("line" . puni-kill-line)
 
-        "l"  (general-simulate-key "C-c l")
+          "l"  (general-simulate-key "C-c l")
 
-        "m" (cons "meta" (make-sparse-keymap))
-        "m." '("def" . xref-find-definitions)
-        "m," '("def-back" . xref-go-back)
-        "mv" '("scroll-other" . scroll-other-window)
+          "m" (cons "meta/modal" (make-sparse-keymap))
+          "m." '("def" . xref-find-definitions)
+          "m," '("def-back" . xref-go-back)
+          "mv" '("scroll-other" . scroll-other-window)
 
-        "o" (cons "open" (make-sparse-keymap))
-        "oe" '("eshell" . eshell)
-        "oa" '("agenda" . org-agenda)
+          "o" (cons "open" (make-sparse-keymap))
+          "oe" '("eshell" . eshell)
+          "oa" '("agenda" . org-agenda)
 
-        "p" (cons "project" project-prefix-map)
+          "p" (cons "project" project-prefix-map)
 
-        "s" '("search" . consult-line)
+          "s" '("search" . consult-line)
+          "S" '("search" . consult-line-multi)
 
-        "S" '("search" . consult-line-multi)
+          "t" (cons "toggle" (make-sparse-keymap))
+          "tl" '("lsp-list" . lsp-ui-imenu)
 
-        "t" (cons "toggle" (make-sparse-keymap))
-        "tl" '("lsp-list" . lsp-ui-imenu)
-        ;; "td" '("close-window" . tabspaces-close-workspace)
-        ;; "to" '("open/create" . tabspaces-open-or-create-project-and-workspace)
+          "u" '("undo-tree" . undo-tree)
 
-        "u" '("undo-tree" . undo-tree)
+          "w" (cons "window" (make-sparse-keymap))
+          "wv" '("vsplit" . split-window-right)
+          "ws" '("split" . split-window-below)
+          "wr" '("remove" . delete-other-windows)
+          "wa" '("ace" . ace-window)
+          "wo" '("other" . crux-other-window-or-switch-buffer)
+          "wf" (cons "frame" (make-sparse-keymap))
+          "wfm" '("make" . make-frame)
+          "wfk" '("kill" . delete-other-frames)
+          "wfd" '("kill-this" . delete-frame)
 
-        "w" (cons "window" (make-sparse-keymap))
-        "wv" '("vsplit" . split-window-right)
-        "ws" '("split" . split-window-below)
-        "wr" '("remove" . delete-other-windows)
-        "wa" '("ace" . ace-window)
-        "wo" '("other" . crux-other-window-or-switch-buffer)
-        "wf" (cons "frame" (make-sparse-keymap))
-        "wfm" '("make" . make-frame)
-        "wfk" '("kill" . delete-other-frames)
-        "wfd" '("kill-this" . delete-frame)
-        ";" '("embark" . embark-act))
+          "x" (cons "C-x" (make-sparse-keymap))
+          "xn" (cons "narrow" narrow-map)
+          "xs" '("save-all" .  save-some-buffers)
+          "xt" '("transpose" . transpose-lines)
+          "xh" '("buff" . mark-whole-buffer)
+          "x;" '("comment". comment-line)
+          "xr" (general-simulate-key "C-x r")
+          "xz" '("repeat". repeat)
+
+          ";" '("embark" . embark-act))
 
 
-      (general-define-key
-       :states 'visual
-       :keymaps 'override
-       :prefix-map 'visual-tyrant-map
-       :prefix "gs")
-      (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
-      (my/visual-leader
-        "r" '("round" . puni-wrap-round)
-        "s" '("square" . puni-wrap-square)
-        "c" '("curly" . puni-wrap-curly)
+        (general-define-key
+         :states 'visual
+         :keymaps 'override
+         :prefix-map 'visual-tyrant-map
+         :prefix "gs")
+        (general-create-definer my/visual-leader :keymaps 'visual-tyrant-map)
+        (my/visual-leader
+          "r" '("round" . puni-wrap-round)
+          "s" '("square" . puni-wrap-square)
+          "c" '("curly" . puni-wrap-curly)
 
-        "a" '("angle" . puni-wrap-angle)
-        "d" '("double-quote" . my/puni-wrap-double-quote)
-        "'" '("quote" . my/puni-wrap-single-quote)
-        "g" '("grav" . my/puni-wrap-grave)
-        "h" '("html" . my/puni-wrap-html-wrap)
-        ";" '("comment" . comment-dwim)))
+          "a" '("angle" . puni-wrap-angle)
+          "d" '("double-quote" . my/puni-wrap-double-quote)
+          "'" '("quote" . my/puni-wrap-single-quote)
+          "g" '("grav" . my/puni-wrap-grave)
+          "h" '("html" . my/puni-wrap-html-wrap)
+          ";" '("comment" . comment-dwim)))
 
-    (use-package repeat
-      :config
-      (repeat-mode)
+      (use-package repeat
+        :config
+        (repeat-mode)
 
-      (defvar repeat-isearch-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "s") 'isearch-repeat-forward)
-          (define-key map (kbd "r") 'isearch-repeat-backward)
-          (define-key map (kbd "w") 'isearch-yank-word-or-char)
-          map))
-      (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
-        (put cmd 'repeat-map 'repeat-isearch-map))
+        (defvar repeat-isearch-map
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "s") 'isearch-repeat-forward)
+            (define-key map (kbd "r") 'isearch-repeat-backward)
+            (define-key map (kbd "w") 'isearch-yank-word-or-char)
+            map))
+        (dolist (cmd '(isearch-repeat-forward isearch-repeat-backward isearch-yank-word-or-char))
+          (put cmd 'repeat-map 'repeat-isearch-map))
 
-      (defvar repeat-xref-next-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "j") 'xref-next-line)
-          (define-key map (kbd "k") 'xref-prev-line)
-          map))
-      (dolist (cmd '(xref-next-line xref-prev-line))
-        (put cmd 'repeat-map 'repeat-xref-next-map)))
+        (defvar repeat-xref-next-map
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "j") 'xref-next-line)
+            (define-key map (kbd "k") 'xref-prev-line)
+            map))
+        (dolist (cmd '(xref-next-line xref-prev-line))
+          (put cmd 'repeat-map 'repeat-xref-next-map))
+
+        (defvar repeat-word-move-map
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "f") 'forward-word)
+            (define-key map (kbd "b") 'backward-word)
+            (define-key map (kbd "d") 'kill-word)
+            map))
+        (dolist (cmd '(forward-word backward-word kill-word))
+          (put cmd 'repeat-map 'repeat-word-move-map))
+
+
+        (defvar repeat-scroll-map
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "d") 'evil-scroll-down)
+            (define-key map (kbd "v") 'scroll-down-command)
+
+            map))
+        (dolist (cmd '(evil-scroll-down scroll-down-command))
+          (put cmd 'repeat-map 'repeat-scroll-map))
+        ;; (defvar repeat-list-move-map
+        ;;        (let ((map (make-sparse-keymap)))
+        ;;          (define-key map (kbd "n") 'forward-list)
+        ;;          (define-key map (kbd "p") 'backward-list)
+        ;;          (define-key map (kbd "u") 'up-list)
+        ;;          (define-key map (kbd "d") 'down-list)
+        ;;          map))
+        ;;      (dolist (cmd '(forward-list backward-list up-list down-list))
+        ;;        (put cmd 'repeat-map 'repeat-list-move-map))
+
+        )
 
 #+END_SRC
-
 
 * workspaces
 #+BEGIN_SRC emacs-lisp
@@ -248,7 +290,7 @@
 (use-package avy
   :commands (avy-with)
   :config
-  (setq avy-all-windows 'all-frames)
+  (setq avy-all-windows t)
   (setq avy-style 'at)
   (setq avy-highlight-first t)
   (setq avy-styles-alist '((avy-goto-char . at)
@@ -281,6 +323,7 @@
 
 
 (use-package crux
+  :bind (("M-o" . crux-other-window-or-switch-buffer))
   :general
   (:states '(normal visual insert)
            "C-a"  #'crux-move-beginning-of-line))
@@ -334,7 +377,9 @@
   :bind (("C-<" . puni-barf-backward)
          ("C-}" . puni-barf-forward)
          ("C-(" . puni-slurp-backward)
-         ("C->" . puni-slurp-forward))
+         ("C->" . puni-slurp-forward)
+         ("M-k" . puni-kill-line)
+         )
   :config
   (defun my/puni-wrap-single-quote (&optional n)
     (interactive "P")
@@ -359,14 +404,25 @@
 
 (use-package hydra
   :defer t
-  :ensure t)
+  :ensure t
+  :config
+
+
+  (defhydra hydra-hl/flycheck ()
+    "hl/flycheck"
+    ("f" flycheck-next-error)
+    ("b" flycheck-previous-error)
+    ("n" diff-hl-next-hunk)
+    ("p" diff-hl-previous-hunk)
+    ("/" diff-hl-revert-hunk)
+    (";" nil))
+  )
 
 (use-package useful-hydras
   :ensure nil
   :commands (hydra-flycheck/flycheck-next-error avy-goto-xah-open hydra-avy/body)
-  :bind (("C-c x t" . hydra-bracket-mov/body)
-         ("C-c x d" . hydra-diff-hl/body)
-         ("C-c x x" . hydra-buffer-file/body)))
+  :bind (([remap hydra-list-mov/forward-list] . forward-list)
+         ))
 
 (defun kmacro-toggle-start-end ()
   "Starts kmacro unless one is already in progress than it ends it"
@@ -379,44 +435,49 @@
 
 * Defaults
 #+BEGIN_SRC emacs-lisp
-  (setq make-backup-files nil
-        auto-save-default nil
-        next-screen-context-lines 5
-        native-comp-async-report-warnings-errors nil
-        isearch-lazy-count t
-        lazy-count-prefix-format nil
-        lazy-count-suffix-format "   (%s/%s)")
+    (setq make-backup-files nil
+          auto-save-default nil
+          next-screen-context-lines 5
+          native-comp-async-report-warnings-errors nil
+          isearch-lazy-count t
+          lazy-count-prefix-format nil
+          frame-resize-pixelwise t
+          window-resize-pixelwise nil
+          lazy-count-suffix-format "   (%s/%s)")
 
-  ;; prevent mouse actions minimizing text
-  (global-set-key (kbd "<pinch>") 'ignore)
-  (global-set-key (kbd "<C-wheel-up>") 'ignore)
-  (global-set-key (kbd "<C-wheel-down>") 'ignore)
+  (setq frame-title-format '("Emacs – %b")
+        icon-title-format frame-title-format)
 
-  (use-package miniedit
-    :ensure t)
+    ;; prevent mouse actions minimizing text
+    (global-set-key (kbd "<pinch>") 'ignore)
+    (global-set-key (kbd "<C-wheel-up>") 'ignore)
+    (global-set-key (kbd "<C-wheel-down>") 'ignore)
 
-  (use-package imenu
-    :ensure nil
-    :custom
-    (imenu-auto-rescan t)
-    (imenu-max-items nil))
+    (use-package miniedit
+      :ensure t)
 
-  (setq-default show-trailing-whitespace nil)
+    (use-package imenu
+      :ensure nil
+      :custom
+      (imenu-auto-rescan t)
+      (imenu-max-items nil))
 
-  (use-package winner
-    :config
-    (winner-mode 1)
-    :bind (("C-c w /" . winner-undo)
-           ("C-c w _" . winner-redo)))
+    (setq-default show-trailing-whitespace nil)
 
-  (use-package undo-tree
-    :defer 5
-    :config
-    (global-undo-tree-mode)
-    (setq undo-tree-auto-save-history nil))
+    (use-package winner
+      :config
+      (winner-mode 1)
+      :bind (("C-c w /" . winner-undo)
+             ("C-c w _" . winner-redo)))
 
-  (use-package rg
-    :defer 9)
+    (use-package undo-tree
+      :defer 5
+      :config
+      (global-undo-tree-mode)
+      (setq undo-tree-auto-save-history nil))
+
+    (use-package rg
+      :defer 9)
 #+END_SRC
 
 * Dired
@@ -680,7 +741,7 @@
     :bind (:map minibuffer-local-map
                 ("DEL" . dw/minibuffer-backward-kill)
                 :map vertico-map
-                ("C-'" . vertico-quick-jump))
+                (";" . vertico-quick-jump))
     :commands (find-file switch-to-buffer)
     :custom
     (vertico-cycle t)
@@ -710,30 +771,10 @@
       (let ((map (make-sparse-keymap)))
         (define-key map (kbd "j") #'vertico-next)
         (define-key map (kbd "k") #'vertico-previous)
+        (define-key map (kbd ";") #'vertico-quick-jump)
         map))
-    (dolist (cmd '(vertico-next vertico-previous))
+    (dolist (cmd '(vertico-next vertico-previous vertico-quick-jump))
       (put cmd 'repeat-map 'vertico-repeat-map)))
-
-  ;; (use-package vertico-posframe
-  ;;   :ensure t
-  ;;   :after (vertico)
-  ;;   :init (vertico-posframe-mode 1)
-  ;;   :config
-  ;;   (setq vertico-multiform-commands
-  ;;         '((consult-line
-  ;;            posframe
-  ;;            (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-  ;;            (vertico-posframe-fallback-mode . vertico-buffer-mode))
-  ;;           (consult-imenu
-  ;;            posframe
-  ;;            (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-  ;;            (vertico-posframe-fallback-mode . vertico-buffer-mode))
-  ;;           (consult-imenu-multi
-  ;;            posframe
-  ;;            (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-  ;;            (vertico-posframe-fallback-mode . vertico-buffer-mode))
-  ;;           (t posframe)))
-  ;;   (vertico-multiform-mode 1))
 
   (use-package orderless
     :ensure t
@@ -873,23 +914,24 @@
 
 * notes
 #+BEGIN_SRC emacs-lisp
-(use-package denote
-  :bind (("C-c d m" . denote))
-  :config
-  (setq denote-allow-multi-word-keywords t)
-  (setq denote-known-keywords '("code" "history" "current-events"))
-  (setq denote-directory (expand-file-name "/home/isaac/denote/"))
-  (setq denote-file-type nil))
+  (use-package denote
+    :bind (("C-c d m" . denote))
+    :config
+    (setq denote-allow-multi-word-keywords t)
+    (setq denote-known-keywords '("code" "history" "current-events"))
 
-(use-package consult-notes
-  :ensure t
-  :bind (("C-c d s" . consult-notes))
-  :commands (consult-notes consult-notes-search-in-all-notes)
-  :config
-  (setq consult-notes-file-dir-sources '(("Name"  ?n  "/home/isaac/denote/")))
-  ;; Set org-roam integration OR denote integration, e.g.:
-  (when (locate-library "denote")
-    (consult-notes-denote-mode)))
+    (require 'my-env)
+    (setq denote-file-type nil))
+
+  (use-package consult-notes
+    :ensure t
+    :bind (("C-c d s" . consult-notes))
+    :commands (consult-notes consult-notes-search-in-all-notes)
+    :config
+    (require 'my-env)
+    ;; Set org-roam integration OR denote integration, e.g.:
+    (when (locate-library "denote")
+      (consult-notes-denote-mode)))
 
 
 
@@ -934,7 +976,7 @@
   (global-corfu-mode)
   :bind
   (:map corfu-map (("C-j" . corfu-next)
-                   ("<" . corfu-quick-jump)
+                   (";" . corfu-quick-jump)
                    ("M-i" . corfu-info-documentation)))
   :config
   ;; (setq corfu-quick1 "neiorst")
@@ -975,72 +1017,74 @@
 #+BEGIN_SRC emacs-lisp
 
 
-(eval-after-load 'org-mode
-  (progn
-    (setq ispell-program-name "/usr/bin/hunspell")
+  (eval-after-load 'org-mode
+    (progn
+      (setq ispell-program-name "/usr/bin/hunspell")
 
-    (setq ispell-hunspell-dict-paths-alist
+      (setq ispell-hunspell-dict-paths-alist
 
-          '(("en_US" "~/Library/Spelling/en_US.dic")))
+            '(("en_US" "~/Library/Spelling/en_US.dic")))
 
-    ;;(setq ispell-local-dictionary "en_US")
+      ;;(setq ispell-local-dictionary "en_US")
 
-    ;; (setq ispell-local-dictionary-alist
+      ;; (setq ispell-local-dictionary-alist
 
-    ;; ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
+      ;; ;; Please note the list `("-d" "en_US")` contains ACTUAL parameters passed to hunspell
 
-    ;; ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
+      ;; ;; You could use `("-d" "en_US,en_US-med")` to check with multiple dictionaries
 
-    ;; '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
+      ;; '(("en_US" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_US") nil utf-8)))
 
 
-    ;; (use-package org-bullets
-    ;;   :after org
-    ;;   :hook (org-mode . org-bullets-mode)
-    ;;   :custom
-    ;;   (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+      ;; (use-package org-bullets
+      ;;   :after org
+      ;;   :hook (org-mode . org-bullets-mode)
+      ;;   :custom
+      ;;   (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
-    ;; renames buffer when the name starts with title
-    (defun org+-buffer-name-to-title ()
-      "Rename buffer to value of #+title:."
-      (interactive)
-      (save-excursion
-        (goto-char (point-min))
-        (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
-          (rename-buffer (match-string 1)))))
-    (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
-    (setq cape-dict-file "/home/isaac/Library/Spelling/en_US.dic")
-    ;; Turn on indentation and auto-fill mode for Org files
-    (defun dw/org-mode-setup ()
-      ;; (org-bullets-mode)
-      (org-modern-mode +1)
-      (org-indent-mode)
-      (auto-fill-mode 0)
-      (visual-line-mode 1)
-      (add-to-list 'completion-at-point-functions #'cape-dict)
-      (org+-buffer-name-to-title))
+      ;; renames buffer when the name starts with title
+      (defun org+-buffer-name-to-title ()
+        "Rename buffer to value of #+title:."
+        (interactive)
+        (save-excursion
+          (goto-char (point-min))
+          (when (re-search-forward "^[[:space:]]*#\\+TITLE:[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+            (rename-buffer (match-string 1)))))
+      (add-hook 'org-mode-hook #'org+-buffer-name-to-title)
+      (require 'my-env)
 
-      (use-package org-modern
-        :ensure t)
 
-      (use-package org-agenda
-        :ensure nil
-        :config
-            (define-key org-agenda-mode-map (kbd "SPC") normal-tyrant-map)
-          (define-key org-agenda-mode-map (kbd "j") 'org-agenda-next-line)
-          (define-key org-agenda-mode-map (kbd "n") 'org-agenda-goto-date)
-          (define-key org-agenda-mode-map (kbd "k") 'org-agenda-previous-line)
-          (define-key org-agenda-mode-map (kbd "p") 'org-agenda-capture))
+      ;; Turn on indentation and auto-fill mode for Org files
+      (defun dw/org-mode-setup ()
+        ;; (org-bullets-mode)
+        (org-modern-mode +1)
+        (org-indent-mode)
+        (auto-fill-mode 0)
+        (visual-line-mode 1)
+        (add-to-list 'completion-at-point-functions #'cape-dict)
+        (org+-buffer-name-to-title))
 
-      (use-package org
-        :mode (("\\.org\\'" . org-mode))
-        :hook (org-mode . dw/org-mode-setup)
-        :config
-          (unbind-key "C-," org-mode-map)
-          (setq org-agenda-start-with-log-mode t)
-          (setq org-log-done `time)
-          (setq org-log-into-drawer t))
-      ))
+        (use-package org-modern
+          :ensure t)
+
+        (use-package org-agenda
+          :ensure nil
+          :config
+              (define-key org-agenda-mode-map (kbd "SPC") normal-tyrant-map)
+            (define-key org-agenda-mode-map (kbd "j") 'org-agenda-next-line)
+            (define-key org-agenda-mode-map (kbd "n") 'org-agenda-goto-date)
+            (define-key org-agenda-mode-map (kbd "k") 'org-agenda-previous-line)
+            (define-key org-agenda-mode-map (kbd "p") 'org-agenda-capture))
+
+        (use-package org
+          :mode (("\\.org\\'" . org-mode))
+          :hook (org-mode . dw/org-mode-setup)
+          :config
+            (unbind-key "C-," org-mode-map)
+            (setq org-agenda-start-with-log-mode t)
+            (setq org-log-done `time)
+            (setq org-log-into-drawer t))
+        ))
 
 #+END_SRC
 
@@ -1159,12 +1203,17 @@
 
     (use-package prettier-js
       :ensure t
-      :after (rjsx-mode)
+      :after (rjsx-mode js-ts-mode typescript-ts-mode)
       :hook ((rjxs . prettier-js-mode)
+             (js-ts-mode . prettier-js-mode)
+             (typescript-ts-mode . prettier-js-mode)
+
              ;; (prettier-js-mode . super-save-mode)
              ))
 
-    ;; (add-hook 'js-mode-hook 'prettier-js-mode)
+    (add-hook 'js-ts-mode-hook 'prettier-js-mode)
+
+    (add-hook 'typescript-ts-mode-hook 'prettier-js-mode)
     ;; (add-hook 'web-mode-hook 'prettier-js-mode)
 
     (use-package rjsx-mode
@@ -1181,7 +1230,6 @@
       (flycheck-mode +1)
       (company-mode 1)
       (corfu-mode -1)
-      (super-save-mode -1)
       (prettier-js-mode 1)
       (tide-hl-identifier-mode +1))
 
@@ -1204,7 +1252,6 @@
       (flycheck-mode +1)
       (company-mode 1)
       (corfu-mode -1)
-      (super-save-mode -1)
       (prettier-js-mode 1)))
 
 #+END_SRC
