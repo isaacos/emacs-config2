@@ -1,17 +1,47 @@
 ;; -*- lexical-binding: t; -*-
 (add-to-list 'default-frame-alist '(font . "Hack Nerd Font Propo-12"))
+(setenv "GIT_SSH_COMMAND" "ssh -i /home/isaac/.ssh/finn-bitbucket")
 (add-to-list 'default-frame-alist '(alpha-background . 90))
 
 (require 'package)
-(when (version<= "28.0.50" emacs-version )
-  (global-display-line-numbers-mode))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/")t)
-(add-to-list 'package-archives '("org". "https://orgmode.org/elpa/"))
+;; (when (version<= "28.0.50" emacs-version )
+;;   (global-display-line-numbers-mode))
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/")t)
+;; (add-to-list 'package-archives '("org". "https://orgmode.org/elpa/"))
+(when (version< emacs-version "28")
+  (add-to-list 'package-archives
+               '("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/"))
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/"))
+
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/my/"))
+
+(customize-set-variable 'package-archive-priorities
+                        '(("gnu"    . 99)
+                          ("nongnu" . 80)
+                          ("stable" . 70)
+                          ("melpa"  . 0)))
 
 (require 'use-package)
 (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 
+(use-package auto-compile
+  :demand t
+  :custom
+  (auto-compile-check-parens nil)
+  :config
+  (auto-compile-on-load-mode)
+  (auto-compile-on-save-mode))
+
+(use-package gcmh
+  :ensure t
+  :hook (after-init . gcmh-mode)
+  :custom
+  (gcmh-low-cons-threshold (* 2 1000 1000)))
+
+(setq switch-to-buffer-obey-display-actions t)
 
 (defun my/load-config ()
   (progn
@@ -60,7 +90,7 @@
 
 (add-hook 'after-init-hook
   (lambda () (progn
-    
+
     (use-package nerd-icons
       ;; :elpaca t
       :defer t
@@ -105,26 +135,26 @@
     ;;   (doom-modeline-mode))
 
     ;; (setq doom-modeline-i)
-;; (custom-set-faces
-;;   '(mode-line-inactive ((t (:font "DejavuSansM Nerd Font Mono-10" :box (:line-width 1 :height 0.8))))))
-;; (doom-modeline-mode))
+    ;; (custom-set-faces
+    ;;   '(mode-line-inactive ((t (:font "DejavuSansM Nerd Font Mono-10" :box (:line-width 1 :height 0.8))))))
+    ;; (doom-modeline-mode))
     )))
 
 (use-package spacious-padding
   :ensure t
   :init
-(setq spacious-padding-widths
-      '( :internal-border-width 8
-         :header-line-width 2
-         :mode-line-width 2
-         :tab-width 4
-         :right-divider-width 10
-         :scroll-bar-width 0
-         :fringe-width 2))
+  (setq spacious-padding-widths
+        '( :internal-border-width 8
+           :header-line-width 2
+           :mode-line-width 2
+           :tab-width 4
+           :right-divider-width 10
+           :scroll-bar-width 0
+           :fringe-width 2))
   (spacious-padding-mode +1))
 
-   ;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-meow.el"))
-   ;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.org"))
+;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-meow.el"))
+;; (org-babel-load-file (expand-file-name "~/.emacs.d/my-evil-config.org"))
 
 ;; (run-with-idle-timer 1 nil 'my/load-config)
 (my/load-config)
@@ -147,35 +177,25 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(avy-lead-face ((t (:foreground "#1f2430" :background "#f28779"))))
- '(avy-lead-face-0 ((t (:foreground "#2a283e" :background "#e96288"))))
- '(avy-lead-face-1 ((t (:foreground "#2a283e" :background "#338fff"))))
- '(aw-leading-char-face ((t (:foreground "#1f2430" :background "#f28779" :height 3.0))))
  '(easy-kill-origin ((t (:inherit error :background "white smoke" :foreground "red" :inverse-video t))))
- '(fringe ((t :background "unspecified-bg")))
- '(header-line ((t :box (:line-width 2 :color "unspecified-bg" :style nil))))
- '(header-line-highlight ((t :box (:color "unspecified-fg"))))
+ '(fringe ((t :background "#232136")))
+ '(header-line ((t :box (:line-width 2 :color "#2a273f" :style nil))))
+ '(header-line-highlight ((t :box (:color "#e0def4"))))
  '(keycast-key ((t)))
- '(line-number ((t :background "unspecified-bg")))
- '(mode-line ((t :box (:line-width 2 :color "unspecified-bg" :style nil))))
- '(mode-line-active ((t :box (:line-width 2 :color nil :style nil))))
- '(mode-line-highlight ((t :box (:color "unspecified-fg"))))
- '(mode-line-inactive ((t :box (:line-width 2 :color nil :style nil))))
- '(org-level-1 ((t (:inherit outline-1 :foreground "#f6bccc" :height 1.8))))
- '(org-level-2 ((t (:inherit outline-2 :foreground "#c2f0c2" :height 1.5))))
- '(org-level-3 ((t (:inherit outline-3 :foreground "#b6a0ff" :height 1.3))))
- '(org-level-4 ((t (:inherit outline-4 :foreground "#f6bccc" :height 1.1))))
- '(org-level-5 ((t (:inherit outline-5 :foreground "#c2f0c2" :height 1.05))))
- '(tab-bar-tab ((t :box (:line-width 4 :color "grey" :style nil))))
- '(tab-bar-tab-inactive ((t :box (:line-width 4 :color "grey" :style nil))))
+ '(line-number ((t :background "#232136")))
+ '(mode-line ((t :box (:line-width 2 :color "#484d67" :style nil))))
+ '(mode-line-active ((t :box (:line-width 2 :color "#484d67" :style nil))))
+ '(mode-line-highlight ((t :box (:color "#e0def4"))))
+ '(mode-line-inactive ((t :box (:line-width 2 :color "#292d48" :style nil))))
+ '(tab-bar-tab ((t :box (:line-width 4 :color "#0d0e1c" :style nil))))
+ '(tab-bar-tab-inactive ((t :box (:line-width 4 :color "#4a4f6a" :style nil))))
  '(tab-line-tab ((t)))
  '(tab-line-tab-active ((t)))
  '(tab-line-tab-inactive ((t)))
- '(vertical-border ((t :background "unspecified-bg" :foreground "unspecified-bg")))
- '(vimish-fold-overlay ((t (:foreground "#f39386" :background "#3c3836"))))
- '(window-divider ((t (:background "unspecified-bg" :foreground "unspecified-bg"))))
- '(window-divider-first-pixel ((t (:background "unspecified-bg" :foreground "unspecified-bg"))))
- '(window-divider-last-pixel ((t (:background "unspecified-bg" :foreground "unspecified-bg")))))
+ '(vertical-border ((t :background "#232136" :foreground "#232136")))
+ '(window-divider ((t (:background "#232136" :foreground "#232136"))))
+ '(window-divider-first-pixel ((t (:background "#232136" :foreground "#232136"))))
+ '(window-divider-last-pixel ((t (:background "#232136" :foreground "#232136")))))
 
 (put 'narrow-to-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
@@ -187,16 +207,16 @@
   :disabled)
 
 (use-package tetris
-    ;; :elpaca nil
+  ;; :elpaca nil
   :disabled)
 
 (use-package isearchb
-    ;; :elpaca nil
+  ;; :elpaca nil
   :disabled)
 
 
 (use-package rect
-    ;; :elpaca nil
+  ;; :elpaca nil
   :bind
   (:map rectangle-mark-mode-map
         ("t" . string-rectangle)
@@ -210,15 +230,15 @@
         (" " . delete-whitespace-rectangle)))
 
 (use-package ps-mode
-    ;; :elpaca nil
+  ;; :elpaca nil
   :mode (("\\.ps\\'" . ps-mode)))
 
 (use-package ruby-mode
-    ;; :elpaca nil
+  ;; :elpaca nil
   :mode (("\\.rb\\'" . ruby-mode)))
 
 (use-package verilog-mode
-    ;; :elpaca nil
+  ;; :elpaca nil
   :mode (("\\.vh\\'" . verilog-mode)
          ("\\.vlg\\'" . verilog-mode)))
 
@@ -226,7 +246,7 @@
   (message "Emacs loaded in %s with %d garbage collections."
            (format "%.2f seconds"
                    (float-time
-                   (time-subtract after-init-time before-init-time)))
+                    (time-subtract after-init-time before-init-time)))
            gcs-done))
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
@@ -247,3 +267,10 @@
 ;; (put 'upcase-region 'disabled nil)
 
 ;; (setq initial-buffer-choice "~/.emacs.d/start.org")
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(auto-compile gcmh miniedit hydra zoxide zop-to-char xterm-color which-key web-mode visual-fill-column vimish-fold use-package undo-tree undo-fu-session typescript-mode treesit-auto tree-sitter-langs tide tempel-collection tabspaces system-packages sr-speedbar spacious-padding sly rose-pine-emacs rjsx-mode rg rainbow-mode rainbow-delimiters python-mode puni prettier-js prettier pdf-tools org-modern orderless openwith nov nginx-mode nerd-icons-corfu modus-themes marginalia magit lua-mode lsp-ui lsp-docker keychain-environment key-chord imenu-list git-timemachine general expreg exec-path-from-shell evil-collection eshell-z embark-consult elpy ednc eat docker dirvish diff-hl crux corfu consult-notes consult-eglot consult-denote cape anzu ansible all-the-icons ace-window)))
