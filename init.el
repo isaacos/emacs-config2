@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (add-to-list 'default-frame-alist '(font . "Hack Nerd Font Propo-12"))
-(setenv "GIT_SSH_COMMAND" "ssh -i /home/isaac/.ssh/finn-bitbucket")
+
 (add-to-list 'default-frame-alist '(alpha-background . 90))
 
 (require 'package)
